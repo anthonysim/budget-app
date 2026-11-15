@@ -1,0 +1,12 @@
+.plans/
+node_modules
+.env*
+!.env.example
+.output
+.vercel
+.tanstack
+dist
+.nitro
+.DS_Store
+dist-ssr
+*.local
