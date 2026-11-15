@@ -2,7 +2,7 @@
 
 YNAB clone to manage personal finances. Zero-based envelope budgeting.
 
-**Stack:** TanStack Start + Router, React, Tailwind v4 + shadcn/ui, Vitest. Supabase (Postgres + Auth) and Drizzle land in upcoming PRs. Hosted on Vercel.
+**Stack:** TanStack Start + Router, React, Tailwind v4 + shadcn/ui, Vitest. Supabase (Postgres + Auth) + Drizzle ORM. Hosted on Vercel.
 
 ## Prerequisites
 
@@ -19,30 +19,50 @@ cd budget-app
 # 2. install deps
 pnpm install
 
-# 3. (optional for now) env vars
+# 3. env vars (defaults point at local Supabase)
 cp .env.example .env.local
 
-# 4. start dev server
+# 4. start local Supabase (needs Docker running)
+pnpm supabase:start
+
+# 5. apply DB migrations
+pnpm db:migrate
+
+# 6. start dev server
 pnpm dev
 ```
 
-App runs at http://localhost:3000.
+App runs at http://localhost:3000. Check DB wiring: http://localhost:3000/api/health should return `{"ok":true,"db":"up"}`.
 
-> Env vars are not required yet. Supabase keys are needed starting with the Supabase PR.
+Stop local Supabase with `pnpm supabase:stop`.
+
+### Database workflow
+
+Schema lives in `src/db/schema/*.ts` (Drizzle). After changing it:
+
+```bash
+pnpm db:generate   # writes SQL migration to drizzle/
+pnpm db:migrate    # applies it
+```
+
+Hosted Supabase: set `DATABASE_URL` to the Supavisor **transaction pooler** URL (port 6543). The Drizzle client already uses `prepare: false` for that.
 
 ## Scripts
 
-| Command           | What it does                            |
-| ----------------- | --------------------------------------- |
-| `pnpm dev`        | Dev server on port 3000                 |
-| `pnpm build`      | Production build (output in `.output/`) |
-| `pnpm preview`    | Serve the production build locally      |
-| `pnpm typecheck`  | TypeScript check                        |
-| `pnpm lint`       | ESLint                                  |
-| `pnpm check`      | Prettier check                          |
-| `pnpm format`     | Prettier write + ESLint fix             |
-| `pnpm test`       | Run Vitest once                         |
-| `pnpm test:watch` | Vitest watch mode                       |
+| Command                         | What it does                            |
+| ------------------------------- | --------------------------------------- |
+| `pnpm dev`                      | Dev server on port 3000                 |
+| `pnpm build`                    | Production build (output in `.output/`) |
+| `pnpm preview`                  | Serve the production build locally      |
+| `pnpm typecheck`                | TypeScript check                        |
+| `pnpm lint`                     | ESLint                                  |
+| `pnpm check`                    | Prettier check                          |
+| `pnpm format`                   | Prettier write + ESLint fix             |
+| `pnpm test`                     | Run Vitest once                         |
+| `pnpm test:watch`               | Vitest watch mode                       |
+| `pnpm db:generate`              | Generate SQL migration from schema      |
+| `pnpm db:migrate`               | Apply migrations                        |
+| `pnpm supabase:start` / `:stop` | Local Supabase (Docker)                 |
 
 Before opening a PR, run: `pnpm build && pnpm typecheck && pnpm lint && pnpm check && pnpm test` (same as CI).
 
@@ -52,7 +72,11 @@ Before opening a PR, run: `pnpm build && pnpm typecheck && pnpm lint && pnpm che
 src/
   routes/        file-based routes (TanStack Router)
   components/ui/ shadcn/ui components (add more: pnpm dlx shadcn@latest add <name>)
-  lib/           shared helpers (money.ts = milliunit math)
+  db/            Drizzle client + schema
+  server/        server functions (from PR 3)
+  lib/           helpers (money.ts, env.server.ts, supabase/ clients)
+supabase/        local Supabase config
+drizzle/         generated SQL migrations
   styles.css     Tailwind + theme tokens
 ```
 
