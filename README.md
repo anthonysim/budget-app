@@ -8,6 +8,7 @@ YNAB clone to manage personal finances. Zero-based envelope budgeting.
 
 - [Node.js](https://nodejs.org) 22+
 - [pnpm](https://pnpm.io) 10+ (`npm i -g pnpm`)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (runs local Supabase; must be open before `pnpm supabase:start`)
 
 ## Getting started
 
@@ -34,7 +35,15 @@ pnpm dev
 
 App runs at http://localhost:3000. Check DB wiring: http://localhost:3000/api/health should return `{"ok":true,"db":"up"}`.
 
-Stop local Supabase with `pnpm supabase:stop`.
+### Local Supabase
+
+`pnpm supabase:start` runs a private copy of Supabase on your machine using Docker containers: a Postgres database (port 54322), the auth server, and the API gateway (port 54321). The app talks to it the same way it talks to hosted Supabase; only the URL and keys differ (see `.env.example`).
+
+- No Supabase account needed. Free, works offline, safe to wipe and rebuild.
+- First start downloads Docker images (a few minutes). Later starts take seconds.
+- Data persists in a Docker volume between `supabase:stop` and `supabase:start`.
+- Fully separate from any hosted/production project. Nothing syncs between them.
+- Stop it with `pnpm supabase:stop` to free RAM. Reset the DB with `pnpm exec supabase db reset`, then `pnpm db:migrate`.
 
 ### Database workflow
 
