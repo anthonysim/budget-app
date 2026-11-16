@@ -6,9 +6,9 @@ export const Route = createFileRoute('/_authed/budgets/$budgetId/reports')({
 
 function Page() {
   return (
-    <main className="p-6">
+    <div className="p-6">
       <h1 className="text-2xl font-semibold">Reports</h1>
       <p className="text-muted-foreground mt-2 text-sm">Coming soon.</p>
-    </main>
+    </div>
   )
 }
