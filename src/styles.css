@@ -108,15 +108,16 @@
   --negative: var(--destructive);
   --negative-soft: oklch(0.936 0.031 17.7);
   --negative-foreground: oklch(0.444 0.161 26.9);
-  --sidebar: oklch(0.26 0.058 274.7);
-  --sidebar-foreground: oklch(0.933 0.018 279.1);
+  /* Same gray as the group/Total row backgrounds (bg-muted/70 on the page background). */
+  --sidebar: color-mix(in oklch, var(--muted) 70%, var(--background));
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: oklch(0.497 0.217 270.9);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.333 0.083 274.6);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.324 0.068 275.2);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
   --sidebar-ring: oklch(0.675 0.173 276 / 70%);
-  --sidebar-destructive: oklch(0.711 0.166 22.2);
+  --sidebar-destructive: var(--destructive);
 }
 
 .dark {
