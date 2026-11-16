@@ -11,6 +11,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -64,6 +65,7 @@
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
+  --canvas: oklch(0.955 0.008 271);
   --foreground: oklch(0.226 0.039 276.3);
   --card: oklch(0.979 0.004 271.4);
   --card-foreground: oklch(0.226 0.039 276.3);
@@ -119,6 +121,7 @@
 
 .dark {
   --background: oklch(0.175 0.017 273.6);
+  --canvas: oklch(0.135 0.015 273.6);
   --foreground: oklch(0.938 0.014 277.1);
   --card: oklch(0.221 0.024 273.4);
   --card-foreground: oklch(0.938 0.014 277.1);
@@ -187,6 +190,12 @@
   body,
   #app {
     min-height: 100%;
+  }
+
+  /* No rubber-band bounce on the page: the app shell is a fixed frame. */
+  html,
+  body {
+    overscroll-behavior: none;
   }
 
   body {
