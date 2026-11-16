@@ -43,6 +43,20 @@
       "when": 1794795512316,
       "tag": "0005_accounts_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794796295897,
+      "tag": "0006_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794796297530,
+      "tag": "0007_categories_rls_seed",
+      "breakpoints": true
     }
   ]
 }

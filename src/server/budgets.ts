@@ -9,6 +9,7 @@ import {
 } from '#/lib/budget-schemas'
 import { firstOfMonth } from '#/lib/month'
 import { requireBudgetRole } from '#/server/budget-access'
+import { seedDefaultCategories } from '#/server/categories-seed'
 import { queryAccounts } from '#/server/accounts-query'
 import { requireUser } from '#/server/require-user'
 
@@ -77,6 +78,7 @@ export const createBudget = createServerFn({ method: 'POST' })
       await tx
         .insert(budgetMembers)
         .values({ budgetId: budget.id, userId: user.id, role: 'owner' })
+      await seedDefaultCategories(tx, budget.id)
       return budget.id
     })
     return { id }

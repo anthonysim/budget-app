@@ -1,5 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { BarChart3Icon, LandmarkIcon, WalletIcon } from 'lucide-react'
+import {
+  BarChart3Icon,
+  LandmarkIcon,
+  ListTreeIcon,
+  WalletIcon,
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +26,11 @@ import type { BudgetSummary } from '#/components/budgets/budget-types'
 const NAV = [
   { to: '/budgets/$budgetId/budget', label: 'Budget', icon: WalletIcon },
   { to: '/budgets/$budgetId/reports', label: 'Reports', icon: BarChart3Icon },
+  {
+    to: '/budgets/$budgetId/categories',
+    label: 'Categories',
+    icon: ListTreeIcon,
+  },
   {
     to: '/budgets/$budgetId/accounts',
     label: 'All Accounts',
