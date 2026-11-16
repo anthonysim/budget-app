@@ -176,7 +176,10 @@ export function SearchDialog({
           if (!o) setQuery('')
         }}
       >
-        <DialogContent className="top-[20%] translate-y-0 gap-3 p-4 sm:max-w-xl">
+        <DialogContent
+          showCloseButton={false}
+          className="top-[20%] translate-y-0 gap-3 p-4 sm:max-w-xl"
+        >
           <DialogTitle className="sr-only">Search</DialogTitle>
           <DialogDescription className="sr-only">
             Search accounts, categories and transactions
