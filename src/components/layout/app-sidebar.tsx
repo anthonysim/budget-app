@@ -18,7 +18,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from '#/components/ui/sidebar'
 import { BudgetSwitcher } from '#/components/layout/budget-switcher'
 import { UserMenu } from '#/components/layout/user-menu'
@@ -109,7 +108,6 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }
