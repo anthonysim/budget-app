@@ -104,6 +104,14 @@ Scheduled transactions are entered as real (uncleared) transactions when they co
   env var is set. Generate a long random value, add it under Settings > Environment Variables (Production),
   and never commit it. Without it the endpoint returns 503.
 
+## Reports
+
+Reports page: Net worth and Age of Money tiles, spending breakdown (by category, category group or payee), income vs expense by month, net worth over time, and Age of Money over time. One filter row (date range presets or custom, account, spending dimension) scopes everything; the URL holds the filters. Every chart has a Table view.
+
+- Math is pure and tested in `src/domain/reports.ts`. Age of Money is FIFO: each spend uses the oldest unspent dollars; the figure is the dollar-weighted average age of the last 10 spends (cash movements in on-budget asset accounts; transfers between them are ignored except card payments).
+- Charts are small hand-written SVG components in `src/components/reports/` (no chart library). Colors are the validated blue/orange pair defined as `--viz-*` tokens in `src/styles.css` (light and dark).
+- Starting balances are not counted as income.
+
 ## Importing transactions
 
 Account page > **Import** accepts CSV, OFX and QFX. Files are parsed in the browser (`src/lib/import/`); only parsed rows are sent.
