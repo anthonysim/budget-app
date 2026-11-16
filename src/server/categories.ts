@@ -1,7 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, categoryGroups, transactions } from '#/db/schema'
+import {
+  categories,
+  categoryGroups,
+  subtransactions,
+  transactions,
+} from '#/db/schema'
 import { budgetIdSchema } from '#/lib/budget-schemas'
 import {
   deleteCategorySchema,
@@ -142,9 +147,11 @@ export const updateCategory = createServerFn({ method: 'POST' })
       hidden?: boolean
       groupId?: string
       sort?: number
+      note?: string | null
     } = {}
     if (data.name !== undefined) set.name = data.name
     if (data.hidden !== undefined) set.hidden = data.hidden
+    if (data.note !== undefined) set.note = data.note || null
     if (data.groupId !== undefined) {
       const [group] = await db()
         .select({ id: categoryGroups.id })
@@ -191,6 +198,15 @@ export const deleteCategory = createServerFn({ method: 'POST' })
             and(
               eq(transactions.budgetId, data.budgetId),
               eq(transactions.categoryId, data.categoryId),
+            ),
+          )
+        await tx
+          .update(subtransactions)
+          .set({ categoryId: data.reassignToCategoryId })
+          .where(
+            and(
+              eq(subtransactions.budgetId, data.budgetId),
+              eq(subtransactions.categoryId, data.categoryId),
             ),
           )
       }

@@ -1,6 +1,11 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, categoryGroups, transactions } from '#/db/schema'
+import {
+  categories,
+  categoryGroups,
+  subtransactions,
+  transactions,
+} from '#/db/schema'
 
 // Server-only query helpers (no createServerFn here; see accounts-query.ts for why).
 
@@ -25,7 +30,7 @@ export async function queryCategoryGroups(
   budgetId: string,
   options: { includeCreditCardPayments?: boolean } = {},
 ): Promise<Array<CategoryGroupRow>> {
-  const [groups, cats, usage] = await Promise.all([
+  const [groups, cats, usage, splitUsage] = await Promise.all([
     db()
       .select({
         id: categoryGroups.id,
@@ -56,8 +61,19 @@ export async function queryCategoryGroups(
       .from(transactions)
       .where(eq(transactions.budgetId, budgetId))
       .groupBy(transactions.categoryId),
+    db()
+      .select({
+        categoryId: subtransactions.categoryId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(subtransactions)
+      .where(eq(subtransactions.budgetId, budgetId))
+      .groupBy(subtransactions.categoryId),
   ])
-  const counts = new Map(usage.map((u) => [u.categoryId, u.count]))
+  const counts = new Map<string | null, number>()
+  for (const u of [...usage, ...splitUsage]) {
+    counts.set(u.categoryId, (counts.get(u.categoryId) ?? 0) + u.count)
+  }
 
   const byGroup = new Map<string, Array<CategoryRow>>()
   for (const { groupId, ...rest } of cats) {

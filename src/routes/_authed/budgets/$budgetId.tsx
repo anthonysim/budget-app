@@ -20,7 +20,7 @@ const authed = getRouteApi('/_authed')
 
 function BudgetLayout() {
   const { user } = Route.useRouteContext()
-  const { budget, accounts } = Route.useLoaderData()
+  const { budget, accounts, invites } = Route.useLoaderData()
   const budgets = authed.useLoaderData()
   return (
     <AppShell
@@ -28,6 +28,7 @@ function BudgetLayout() {
       budget={budget}
       budgets={budgets}
       accounts={accounts}
+      invites={invites}
     >
       <Outlet />
     </AppShell>

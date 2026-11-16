@@ -1,4 +1,24 @@
 import { z } from 'zod'
+import { splitLinesSchema } from '#/lib/splits'
+
+export const FLAGS = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'purple',
+] as const
+export type Flag = (typeof FLAGS)[number]
+
+export const FLAG_COLORS: Record<Flag, string> = {
+  red: '#d03b3b',
+  orange: '#ec835a',
+  yellow: '#fab219',
+  green: '#0ca30c',
+  blue: '#3987e5',
+  purple: '#9085e9',
+}
 
 export const CLEARED_STATUSES = ['uncleared', 'cleared', 'reconciled'] as const
 export type ClearedStatus = (typeof CLEARED_STATUSES)[number]
@@ -24,6 +44,8 @@ const base = {
   /** Set to make this a transfer to/from another account (payeeName is then ignored). */
   transferAccountId: z.uuid().nullable(),
   memo: z.string().trim().max(500).nullable(),
+  /** Split lines (2+). When set the parent has no category of its own. */
+  splits: splitLinesSchema.optional(),
   /** Signed milliunits: inflow positive, outflow negative. */
   amount: z.number().int().min(-1e12).max(1e12),
   cleared: z.enum(['uncleared', 'cleared']),
@@ -34,6 +56,8 @@ export const createTransactionSchema = z.object(base)
 export const updateTransactionSchema = z.object({
   ...base,
   transactionId: z.uuid(),
+  /** Required to edit a reconciled transaction (the UI asks the user to confirm). */
+  confirmReconciled: z.boolean().optional(),
 })
 
 export const listTransactionsSchema = z.object({
@@ -67,6 +91,7 @@ export interface RegisterRow {
   payeeId: string | null
   categoryId: string | null
   transferAccountId: string | null
+  flag: Flag | null
 }
 
 /** Amount split into the two register columns. Zero shows as an empty outflow. */
@@ -108,3 +133,10 @@ export function matchesSearch(
   if (q === '') return true
   return fields.some((f) => f?.toLowerCase().includes(q))
 }
+
+export const setFlagSchema = z.object({
+  budgetId: z.uuid(),
+  transactionIds: z.array(z.uuid()).min(1).max(500),
+  /** null clears the flag */
+  flag: z.enum(FLAGS).nullable(),
+})

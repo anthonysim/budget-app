@@ -1,4 +1,4 @@
-import { useMemo, useState, useTransition } from 'react'
+import { Fragment, useMemo, useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   flexRender,
@@ -15,45 +15,64 @@ import { buildColumns } from '#/components/register/columns'
 import type { RegisterMeta } from '#/components/register/columns'
 import { EditRow } from '#/components/register/edit-row'
 import { NativeSelect } from '#/components/register/native-select'
-import { matchesSearch, runningBalances } from '#/lib/transactions'
+import { FLAGS, matchesSearch, runningBalances } from '#/lib/transactions'
+import type { Flag } from '#/lib/transactions'
 import { transferLabel } from '#/lib/transfers'
+import { approveTransactions } from '#/server/import'
 import {
   bulkUpdateTransactions,
   deleteTransactions,
+  setTransactionFlag,
   updateTransaction,
 } from '#/server/transactions'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import type { CategoryGroupRow } from '#/server/categories-query'
-import type { PayeeRow, TransactionRow } from '#/server/transactions-query'
+import type { ScheduledListRow } from '#/server/scheduled-query'
+import { UpcomingRows } from '#/components/register/upcoming-rows'
+import type {
+  PayeeRow,
+  SplitRow,
+  TransactionRow,
+} from '#/server/transactions-query'
+import { ConfirmDialog } from '#/components/categories/confirm-dialog'
+import { Money } from '#/components/accounts/money'
 
 interface RegisterData {
   transactions: Array<TransactionRow>
+  splits: Array<SplitRow>
+  scheduled: Array<ScheduledListRow>
   payees: Array<PayeeRow>
   categoryGroups: Array<CategoryGroupRow>
   inflowCategoryId: string | null
 }
 
-type ClearedFilter = 'all' | 'uncleared' | 'cleared'
+type ClearedFilter = 'all' | 'uncleared' | 'cleared' | 'unapproved'
 
 export function Register({
   budget,
   accounts,
   data,
   accountId,
+  initialQuery = '',
 }: {
   budget: { id: string; currency: string; dateFormat: string; role: string }
   accounts: Array<AccountWithBalances>
   data: RegisterData
   /** Set for a single-account register; omit for the all-accounts view. */
   accountId?: string
+  /** Pre-fills the search box (from a global search result). */
+  initialQuery?: string
 }) {
   const router = useRouter()
   const canEdit = budget.role !== 'viewer'
   const singleAccount = accountId !== undefined
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [clearedFilter, setClearedFilter] = useState<ClearedFilter>('all')
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [flagFilter, setFlagFilter] = useState<'all' | 'any' | Flag>('all')
+  const [confirmEditId, setConfirmEditId] = useState<string | null>(null)
+  const [editingReconciled, setEditingReconciled] = useState(false)
   const [busy, startTransition] = useTransition()
 
   // Running balance is computed from the full list so filtering never changes it.
@@ -61,6 +80,30 @@ export function Register({
     () => runningBalances(data.transactions),
     [data.transactions],
   )
+
+  const splitsByTxn = useMemo(() => {
+    const map = new Map<string, Array<SplitRow>>()
+    for (const sp of data.splits) {
+      const list = map.get(sp.transactionId) ?? []
+      list.push(sp)
+      map.set(sp.transactionId, list)
+    }
+    return map
+  }, [data.splits])
+  const splitCounts = useMemo(
+    () => new Map([...splitsByTxn].map(([id, list]) => [id, list.length])),
+    [splitsByTxn],
+  )
+
+  function requestEdit(id: string) {
+    const t = data.transactions.find((x) => x.id === id)
+    if (t?.cleared === 'reconciled') {
+      setConfirmEditId(id)
+    } else {
+      setEditingReconciled(false)
+      setEditingId(id)
+    }
+  }
 
   // Newest first for display
   const rows = useMemo(
@@ -70,9 +113,15 @@ export function Register({
         .filter(
           (t) =>
             (clearedFilter === 'all' ||
-              (clearedFilter === 'cleared'
-                ? t.cleared !== 'uncleared'
-                : t.cleared === 'uncleared')) &&
+              (clearedFilter === 'unapproved'
+                ? !t.approved
+                : clearedFilter === 'cleared'
+                  ? t.cleared !== 'uncleared'
+                  : t.cleared === 'uncleared')) &&
+            (flagFilter === 'all' ||
+              (flagFilter === 'any'
+                ? t.flag !== null
+                : t.flag === flagFilter)) &&
             matchesSearch(query, [
               t.payeeName,
               t.memo,
@@ -80,7 +129,7 @@ export function Register({
               t.accountName,
             ]),
         ),
-    [data.transactions, query, clearedFilter],
+    [data.transactions, query, clearedFilter, flagFilter],
   )
 
   const columns = useMemo(
@@ -108,7 +157,24 @@ export function Register({
     canEdit,
     inflowCategoryId: data.inflowCategoryId,
     balances,
-    onEdit: setEditingId,
+    splitCounts,
+    onEdit: requestEdit,
+    onFlag: (t, flag) =>
+      mutate(
+        () =>
+          setTransactionFlag({
+            data: { budgetId: budget.id, transactionIds: [t.id], flag },
+          }),
+        flag ? `Flagged ${flag}` : 'Flag removed',
+      ),
+    onApprove: (t) =>
+      mutate(
+        () =>
+          approveTransactions({
+            data: { budgetId: budget.id, transactionIds: [t.id] },
+          }),
+        'Approved',
+      ),
     onToggleCleared: (t) =>
       mutate(
         () =>
@@ -157,9 +223,9 @@ export function Register({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       ;(el.previousElementSibling as HTMLElement | null)?.focus()
-    } else if (e.key === 'Enter' && canEdit && row.cleared !== 'reconciled') {
+    } else if (e.key === 'Enter' && canEdit) {
       e.preventDefault()
-      setEditingId(row.id)
+      requestEdit(row.id)
     } else if (e.key === ' ' && canEdit && row.cleared !== 'reconciled') {
       e.preventDefault()
       setRowSelection((s) => ({ ...s, [row.id]: !s[row.id] }))
@@ -175,6 +241,7 @@ export function Register({
     inflowCategoryId: data.inflowCategoryId,
     showAccountColumn: !singleAccount,
     showBalanceColumn: singleAccount,
+    currency: budget.currency,
     onDone: () => setEditingId(null),
   }
 
@@ -197,6 +264,24 @@ export function Register({
           <option value="all">All</option>
           <option value="uncleared">Uncleared</option>
           <option value="cleared">Cleared</option>
+          <option value="unapproved">Needs approval</option>
+        </NativeSelect>
+        <NativeSelect
+          aria-label="Filter by flag"
+          className="w-36"
+          value={flagFilter}
+          onChange={(e) =>
+            setFlagFilter(e.target.value as 'all' | 'any' | Flag)
+          }
+        >
+          <option value="all">All flags</option>
+          <option value="any">Any flag</option>
+          {FLAGS.map((f) => (
+            <option key={f} value={f}>
+              {f[0]?.toUpperCase()}
+              {f.slice(1)} flag
+            </option>
+          ))}
         </NativeSelect>
         {canEdit ? (
           <Button className="ml-auto" onClick={() => setEditingId('new')}>
@@ -212,6 +297,28 @@ export function Register({
           inflowCategoryId={data.inflowCategoryId}
           busy={busy}
           onClear={() => setRowSelection({})}
+          onFlag={(flag) =>
+            mutate(
+              () =>
+                setTransactionFlag({
+                  data: {
+                    budgetId: budget.id,
+                    transactionIds: selectedIds,
+                    flag,
+                  },
+                }),
+              'Flags updated',
+            )
+          }
+          onApprove={() =>
+            mutate(
+              () =>
+                approveTransactions({
+                  data: { budgetId: budget.id, transactionIds: selectedIds },
+                }),
+              'Approved',
+            )
+          }
           onCategorize={(categoryId) =>
             mutate(
               () =>
@@ -276,30 +383,68 @@ export function Register({
           </thead>
           <tbody>
             {editingId === 'new' ? <EditRow {...editProps} /> : null}
+            <UpcomingRows
+              scheduled={data.scheduled}
+              accountId={accountId}
+              budget={budget}
+            />
             {table.getRowModel().rows.map((row) =>
               editingId === row.original.id ? (
                 <EditRow
                   key={row.id}
                   {...editProps}
                   transaction={row.original}
+                  existingSplits={splitsByTxn.get(row.original.id)}
+                  confirmReconciled={editingReconciled}
                 />
               ) : (
-                <tr
-                  key={row.id}
-                  tabIndex={0}
-                  data-state={row.getIsSelected() ? 'selected' : undefined}
-                  onKeyDown={(e) => moveFocus(e, row.original)}
-                  className="data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-2 py-1.5">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
+                <Fragment key={row.id}>
+                  <tr
+                    tabIndex={0}
+                    data-state={row.getIsSelected() ? 'selected' : undefined}
+                    data-approved={row.original.approved}
+                    onKeyDown={(e) => moveFocus(e, row.original)}
+                    className="data-[approved=false]:border-l-primary data-[approved=false]:border-l-4 data-[approved=false]:font-semibold data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-2 py-1.5">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {(splitsByTxn.get(row.original.id) ?? []).map((sp) => (
+                    <tr
+                      key={sp.id}
+                      data-testid="split-display-line"
+                      className="bg-muted/20 text-muted-foreground"
+                    >
+                      <td />
+                      {!singleAccount ? <td /> : null}
+                      <td />
+                      <td className="px-2 py-1 pl-6 text-xs">Split</td>
+                      <td className="px-2 py-1">
+                        {sp.categoryName ?? 'Uncategorized'}
+                      </td>
+                      <td className="px-2 py-1">{sp.memo ?? ''}</td>
+                      <td className="px-2 py-1 text-right">
+                        {sp.amount < 0 ? (
+                          <Money value={sp.amount} currency={budget.currency} />
+                        ) : null}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {sp.amount > 0 ? (
+                          <Money value={sp.amount} currency={budget.currency} />
+                        ) : null}
+                      </td>
+                      <td />
+                      {singleAccount ? <td /> : null}
+                      <td />
+                    </tr>
                   ))}
-                </tr>
+                </Fragment>
               ),
             )}
             {rows.length === 0 && editingId !== 'new' ? (
@@ -317,6 +462,20 @@ export function Register({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        open={confirmEditId !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmEditId(null)
+        }}
+        title="Edit a reconciled transaction?"
+        description="This transaction is reconciled. Changing it can make your balance differ from your bank. Edit anyway?"
+        confirmLabel="Edit anyway"
+        onConfirm={() => {
+          setEditingReconciled(true)
+          setEditingId(confirmEditId)
+          setConfirmEditId(null)
+        }}
+      />
     </section>
   )
 }
