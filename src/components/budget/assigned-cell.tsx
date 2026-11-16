@@ -55,7 +55,7 @@ export function AssignedCell({
           e.currentTarget.blur()
         }
       }}
-      className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 aria-[invalid=true]:border-destructive h-8 w-28 rounded-md border px-2 text-right text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px]"
+      className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 aria-[invalid=true]:border-destructive -mr-[9px] h-8 w-28 rounded-md border px-2 text-right text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px]"
     />
   )
 }
