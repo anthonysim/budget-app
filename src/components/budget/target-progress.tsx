@@ -1,0 +1,52 @@
+import { Money } from '#/components/accounts/money'
+import { cn } from '#/lib/utils'
+import type { TargetView } from '#/lib/budget-month'
+
+/** Thin progress bar plus a one-line status under a category name. */
+export function TargetProgress({
+  target,
+  currency,
+}: {
+  target: TargetView
+  currency: string
+}) {
+  const pct = Math.round(target.progress * 100)
+  return (
+    <div className="mt-1 flex items-center gap-2 text-xs">
+      <div
+        role="progressbar"
+        aria-label="Target progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        className="bg-muted h-1.5 w-24 shrink-0 overflow-hidden rounded-full"
+      >
+        <div
+          className={cn(
+            'h-full rounded-full',
+            target.status === 'underfunded' ? 'bg-amber-500' : 'bg-green-600',
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span
+        data-testid="target-status"
+        className={cn(
+          target.status === 'underfunded'
+            ? 'text-amber-700 dark:text-amber-300'
+            : 'text-muted-foreground',
+        )}
+      >
+        {target.status === 'underfunded' ? (
+          <>
+            Underfunded <Money value={target.underfunded} currency={currency} />
+          </>
+        ) : target.status === 'funded' ? (
+          'Funded'
+        ) : (
+          'On target'
+        )}
+      </span>
+    </div>
+  )
+}

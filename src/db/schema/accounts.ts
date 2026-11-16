@@ -1,5 +1,6 @@
 import {
   bigint,
+  jsonb,
   boolean,
   date,
   foreignKey,
@@ -11,6 +12,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core'
+import type { CsvMapping } from '#/lib/import/map'
 import { budgets } from './budgets'
 
 export const accountType = pgEnum('account_type', [
@@ -23,6 +25,15 @@ export const accountType = pgEnum('account_type', [
   'liability',
   'mortgage',
   'loan',
+])
+
+export const transactionFlag = pgEnum('transaction_flag', [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'blue',
+  'purple',
 ])
 
 export const clearedStatus = pgEnum('cleared_status', [
@@ -61,6 +72,11 @@ export const accounts = pgTable(
     closed: boolean('closed').notNull().default(false),
     sort: integer('sort').notNull().default(0),
     note: text('note'),
+    /** Saved CSV column mapping for imports into this account. */
+    importMapping: jsonb('import_mapping').$type<CsvMapping>(),
+    /** Debt accounts: annual rate in basis points (1999 = 19.99%) and minimum monthly payment. */
+    aprBps: integer('apr_bps'),
+    minPayment: bigint('min_payment', { mode: 'number' }),
     lastReconciledAt: timestamp('last_reconciled_at', { withTimezone: true }),
     lastReconciledBalance: bigint('last_reconciled_balance', {
       mode: 'number',
@@ -94,6 +110,9 @@ export const transactions = pgTable(
     memo: text('memo'),
     cleared: clearedStatus('cleared').notNull().default('uncleared'),
     approved: boolean('approved').notNull().default(true),
+    flag: transactionFlag('flag'),
+    /** Dedupe key for imported transactions (bank id, or amount+date+occurrence). */
+    importId: text('import_id'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

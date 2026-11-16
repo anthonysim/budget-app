@@ -4,6 +4,7 @@ import {
   EyeOffIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  StickyNoteIcon,
   Trash2Icon,
 } from 'lucide-react'
 import { Button } from '#/components/ui/button'
@@ -17,6 +18,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
+import { NoteDialog } from '#/components/categories/note-dialog'
 import { DeleteCategoryDialog } from '#/components/categories/delete-category-dialog'
 import { NameDialog } from '#/components/categories/name-dialog'
 import { DragHandle, SortableItem } from '#/components/categories/sortable'
@@ -41,6 +43,7 @@ export function CategoryItem({
   const { run, refresh } = useRunner()
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [noteOpen, setNoteOpen] = useState(false)
   const otherGroups = groups.filter((g) => g.id !== currentGroupId)
 
   return (
@@ -57,6 +60,18 @@ export function CategoryItem({
       >
         {category.name}
         {category.hidden ? ' (hidden)' : ''}
+        {category.note ? (
+          <span
+            className="text-muted-foreground ml-2 text-xs font-normal not-italic"
+            title={category.note}
+          >
+            <StickyNoteIcon className="mr-1 inline size-3" aria-hidden />
+            <span className="sr-only">Note: </span>
+            {category.note.length > 48
+              ? `${category.note.slice(0, 48)}…`
+              : category.note}
+          </span>
+        ) : null}
       </span>
 
       {canEdit ? (
@@ -74,6 +89,9 @@ export function CategoryItem({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => setRenameOpen(true)}>
                 <PencilIcon /> Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setNoteOpen(true)}>
+                <StickyNoteIcon /> {category.note ? 'Edit note' : 'Add note'}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() =>
@@ -144,6 +162,20 @@ export function CategoryItem({
               await refresh('Category renamed')
             }}
           />
+          {noteOpen ? (
+            <NoteDialog
+              open
+              onOpenChange={setNoteOpen}
+              title={`Note for ${category.name}`}
+              initialValue={category.note ?? ''}
+              onSave={async (note) => {
+                await updateCategory({
+                  data: { budgetId, categoryId: category.id, note },
+                })
+                await refresh('Note saved')
+              }}
+            />
+          ) : null}
           <DeleteCategoryDialog
             open={deleteOpen}
             onOpenChange={setDeleteOpen}

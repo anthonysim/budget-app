@@ -3,6 +3,8 @@ import { Trash2Icon } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/categories/confirm-dialog'
 import { CategoryOptions } from '#/components/register/category-options'
+import { FLAGS } from '#/lib/transactions'
+import type { Flag } from '#/lib/transactions'
 import { NativeSelect } from '#/components/register/native-select'
 import type { CategoryGroupRow } from '#/server/categories-query'
 
@@ -14,6 +16,8 @@ export function BulkBar({
   onCategorize,
   onSetCleared,
   onDelete,
+  onApprove,
+  onFlag,
   onClear,
 }: {
   count: number
@@ -24,6 +28,9 @@ export function BulkBar({
   onCategorize: (categoryId: string | null) => void
   onSetCleared: (cleared: 'cleared' | 'uncleared') => void
   onDelete: () => void
+  onApprove: () => void
+  /** null clears the flag */
+  onFlag: (flag: Flag | null) => void
   onClear: () => void
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -68,6 +75,31 @@ export function BulkBar({
         onClick={() => onSetCleared('uncleared')}
       >
         Mark uncleared
+      </Button>
+      <NativeSelect
+        aria-label="Flag selected"
+        className="w-36"
+        value="__none__"
+        disabled={busy}
+        onChange={(e) => {
+          const v = e.target.value
+          if (v === '__none__') return
+          onFlag(v === '' ? null : (v as Flag))
+        }}
+      >
+        <option value="__none__" disabled>
+          Flag as…
+        </option>
+        <option value="">No flag</option>
+        {FLAGS.map((f) => (
+          <option key={f} value={f}>
+            {f[0]?.toUpperCase()}
+            {f.slice(1)}
+          </option>
+        ))}
+      </NativeSelect>
+      <Button size="sm" variant="outline" disabled={busy} onClick={onApprove}>
+        Approve
       </Button>
       <Button
         size="sm"

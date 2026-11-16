@@ -18,9 +18,13 @@ import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthedBudgetsBudgetIdRouteImport } from './routes/_authed/budgets/$budgetId'
 import { Route as AuthedBudgetsNewRouteImport } from './routes/_authed/budgets/new'
+import { Route as ApiCronScheduledRouteImport } from './routes/api/cron/scheduled'
 import { Route as AuthedBudgetsBudgetIdBudgetRouteImport } from './routes/_authed/budgets/$budgetId/budget'
 import { Route as AuthedBudgetsBudgetIdCategoriesRouteImport } from './routes/_authed/budgets/$budgetId/categories'
+import { Route as AuthedBudgetsBudgetIdMembersRouteImport } from './routes/_authed/budgets/$budgetId/members'
+import { Route as AuthedBudgetsBudgetIdPayeeRulesRouteImport } from './routes/_authed/budgets/$budgetId/payee-rules'
 import { Route as AuthedBudgetsBudgetIdReportsRouteImport } from './routes/_authed/budgets/$budgetId/reports'
+import { Route as AuthedBudgetsBudgetIdScheduledRouteImport } from './routes/_authed/budgets/$budgetId/scheduled'
 import { Route as AuthedBudgetsBudgetIdTransactionsRouteImport } from './routes/_authed/budgets/$budgetId/transactions'
 import { Route as AuthedBudgetsBudgetIdAccountsIndexRouteImport } from './routes/_authed/budgets/$budgetId/accounts/index'
 import { Route as AuthedBudgetsBudgetIdAccountsAccountIdRouteImport } from './routes/_authed/budgets/$budgetId/accounts/$accountId'
@@ -69,6 +73,11 @@ const AuthedBudgetsNewRoute = AuthedBudgetsNewRouteImport.update({
   path: '/budgets/new',
   getParentRoute: () => AuthedRoute,
 } as any)
+const ApiCronScheduledRoute = ApiCronScheduledRouteImport.update({
+  id: '/api/cron/scheduled',
+  path: '/api/cron/scheduled',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthedBudgetsBudgetIdBudgetRoute =
   AuthedBudgetsBudgetIdBudgetRouteImport.update({
     id: '/budget',
@@ -81,10 +90,28 @@ const AuthedBudgetsBudgetIdCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthedBudgetsBudgetIdRoute,
   } as any)
+const AuthedBudgetsBudgetIdMembersRoute =
+  AuthedBudgetsBudgetIdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
+const AuthedBudgetsBudgetIdPayeeRulesRoute =
+  AuthedBudgetsBudgetIdPayeeRulesRouteImport.update({
+    id: '/payee-rules',
+    path: '/payee-rules',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
 const AuthedBudgetsBudgetIdReportsRoute =
   AuthedBudgetsBudgetIdReportsRouteImport.update({
     id: '/reports',
     path: '/reports',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
+const AuthedBudgetsBudgetIdScheduledRoute =
+  AuthedBudgetsBudgetIdScheduledRouteImport.update({
+    id: '/scheduled',
+    path: '/scheduled',
     getParentRoute: () => AuthedBudgetsBudgetIdRoute,
   } as any)
 const AuthedBudgetsBudgetIdTransactionsRoute =
@@ -115,9 +142,13 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
   '/budgets/new': typeof AuthedBudgetsNewRoute
+  '/api/cron/scheduled': typeof ApiCronScheduledRoute
   '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
+  '/budgets/$budgetId/members': typeof AuthedBudgetsBudgetIdMembersRoute
+  '/budgets/$budgetId/payee-rules': typeof AuthedBudgetsBudgetIdPayeeRulesRoute
   '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/budgets/$budgetId/scheduled': typeof AuthedBudgetsBudgetIdScheduledRoute
   '/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/budgets/$budgetId/accounts/': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
@@ -131,9 +162,13 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
   '/budgets/new': typeof AuthedBudgetsNewRoute
+  '/api/cron/scheduled': typeof ApiCronScheduledRoute
   '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
+  '/budgets/$budgetId/members': typeof AuthedBudgetsBudgetIdMembersRoute
+  '/budgets/$budgetId/payee-rules': typeof AuthedBudgetsBudgetIdPayeeRulesRoute
   '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/budgets/$budgetId/scheduled': typeof AuthedBudgetsBudgetIdScheduledRoute
   '/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/budgets/$budgetId/accounts': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
@@ -149,9 +184,13 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_authed/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
   '/_authed/budgets/new': typeof AuthedBudgetsNewRoute
+  '/api/cron/scheduled': typeof ApiCronScheduledRoute
   '/_authed/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/_authed/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
+  '/_authed/budgets/$budgetId/members': typeof AuthedBudgetsBudgetIdMembersRoute
+  '/_authed/budgets/$budgetId/payee-rules': typeof AuthedBudgetsBudgetIdPayeeRulesRoute
   '/_authed/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/_authed/budgets/$budgetId/scheduled': typeof AuthedBudgetsBudgetIdScheduledRoute
   '/_authed/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/_authed/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/_authed/budgets/$budgetId/accounts/': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
@@ -167,9 +206,13 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/budgets/$budgetId'
     | '/budgets/new'
+    | '/api/cron/scheduled'
     | '/budgets/$budgetId/budget'
     | '/budgets/$budgetId/categories'
+    | '/budgets/$budgetId/members'
+    | '/budgets/$budgetId/payee-rules'
     | '/budgets/$budgetId/reports'
+    | '/budgets/$budgetId/scheduled'
     | '/budgets/$budgetId/transactions'
     | '/budgets/$budgetId/accounts/$accountId'
     | '/budgets/$budgetId/accounts/'
@@ -183,9 +226,13 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/budgets/$budgetId'
     | '/budgets/new'
+    | '/api/cron/scheduled'
     | '/budgets/$budgetId/budget'
     | '/budgets/$budgetId/categories'
+    | '/budgets/$budgetId/members'
+    | '/budgets/$budgetId/payee-rules'
     | '/budgets/$budgetId/reports'
+    | '/budgets/$budgetId/scheduled'
     | '/budgets/$budgetId/transactions'
     | '/budgets/$budgetId/accounts/$accountId'
     | '/budgets/$budgetId/accounts'
@@ -200,9 +247,13 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_authed/budgets/$budgetId'
     | '/_authed/budgets/new'
+    | '/api/cron/scheduled'
     | '/_authed/budgets/$budgetId/budget'
     | '/_authed/budgets/$budgetId/categories'
+    | '/_authed/budgets/$budgetId/members'
+    | '/_authed/budgets/$budgetId/payee-rules'
     | '/_authed/budgets/$budgetId/reports'
+    | '/_authed/budgets/$budgetId/scheduled'
     | '/_authed/budgets/$budgetId/transactions'
     | '/_authed/budgets/$budgetId/accounts/$accountId'
     | '/_authed/budgets/$budgetId/accounts/'
@@ -215,6 +266,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiHealthRoute: typeof ApiHealthRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiCronScheduledRoute: typeof ApiCronScheduledRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -282,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBudgetsNewRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/api/cron/scheduled': {
+      id: '/api/cron/scheduled'
+      path: '/api/cron/scheduled'
+      fullPath: '/api/cron/scheduled'
+      preLoaderRoute: typeof ApiCronScheduledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authed/budgets/$budgetId/budget': {
       id: '/_authed/budgets/$budgetId/budget'
       path: '/budget'
@@ -296,11 +355,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBudgetsBudgetIdCategoriesRouteImport
       parentRoute: typeof AuthedBudgetsBudgetIdRoute
     }
+    '/_authed/budgets/$budgetId/members': {
+      id: '/_authed/budgets/$budgetId/members'
+      path: '/members'
+      fullPath: '/budgets/$budgetId/members'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdMembersRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
+    '/_authed/budgets/$budgetId/payee-rules': {
+      id: '/_authed/budgets/$budgetId/payee-rules'
+      path: '/payee-rules'
+      fullPath: '/budgets/$budgetId/payee-rules'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdPayeeRulesRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
     '/_authed/budgets/$budgetId/reports': {
       id: '/_authed/budgets/$budgetId/reports'
       path: '/reports'
       fullPath: '/budgets/$budgetId/reports'
       preLoaderRoute: typeof AuthedBudgetsBudgetIdReportsRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
+    '/_authed/budgets/$budgetId/scheduled': {
+      id: '/_authed/budgets/$budgetId/scheduled'
+      path: '/scheduled'
+      fullPath: '/budgets/$budgetId/scheduled'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdScheduledRouteImport
       parentRoute: typeof AuthedBudgetsBudgetIdRoute
     }
     '/_authed/budgets/$budgetId/transactions': {
@@ -330,7 +410,10 @@ declare module '@tanstack/react-router' {
 interface AuthedBudgetsBudgetIdRouteChildren {
   AuthedBudgetsBudgetIdBudgetRoute: typeof AuthedBudgetsBudgetIdBudgetRoute
   AuthedBudgetsBudgetIdCategoriesRoute: typeof AuthedBudgetsBudgetIdCategoriesRoute
+  AuthedBudgetsBudgetIdMembersRoute: typeof AuthedBudgetsBudgetIdMembersRoute
+  AuthedBudgetsBudgetIdPayeeRulesRoute: typeof AuthedBudgetsBudgetIdPayeeRulesRoute
   AuthedBudgetsBudgetIdReportsRoute: typeof AuthedBudgetsBudgetIdReportsRoute
+  AuthedBudgetsBudgetIdScheduledRoute: typeof AuthedBudgetsBudgetIdScheduledRoute
   AuthedBudgetsBudgetIdTransactionsRoute: typeof AuthedBudgetsBudgetIdTransactionsRoute
   AuthedBudgetsBudgetIdAccountsAccountIdRoute: typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   AuthedBudgetsBudgetIdAccountsIndexRoute: typeof AuthedBudgetsBudgetIdAccountsIndexRoute
@@ -339,7 +422,10 @@ interface AuthedBudgetsBudgetIdRouteChildren {
 const AuthedBudgetsBudgetIdRouteChildren: AuthedBudgetsBudgetIdRouteChildren = {
   AuthedBudgetsBudgetIdBudgetRoute: AuthedBudgetsBudgetIdBudgetRoute,
   AuthedBudgetsBudgetIdCategoriesRoute: AuthedBudgetsBudgetIdCategoriesRoute,
+  AuthedBudgetsBudgetIdMembersRoute: AuthedBudgetsBudgetIdMembersRoute,
+  AuthedBudgetsBudgetIdPayeeRulesRoute: AuthedBudgetsBudgetIdPayeeRulesRoute,
   AuthedBudgetsBudgetIdReportsRoute: AuthedBudgetsBudgetIdReportsRoute,
+  AuthedBudgetsBudgetIdScheduledRoute: AuthedBudgetsBudgetIdScheduledRoute,
   AuthedBudgetsBudgetIdTransactionsRoute:
     AuthedBudgetsBudgetIdTransactionsRoute,
   AuthedBudgetsBudgetIdAccountsAccountIdRoute:
@@ -375,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiHealthRoute: ApiHealthRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiCronScheduledRoute: ApiCronScheduledRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
