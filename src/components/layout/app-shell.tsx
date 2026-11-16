@@ -10,6 +10,7 @@ import type { AccountWithBalances } from '#/server/accounts-query'
 import { SearchDialog } from '#/components/layout/search-dialog'
 import { InvitesBanner } from '#/components/sharing/invites-banner'
 import type { MyInvite } from '#/lib/sharing'
+import { UserMenu } from '#/components/layout/user-menu'
 import { ThemeToggle } from '#/components/theme-toggle'
 
 export function AppShell({
@@ -29,12 +30,7 @@ export function AppShell({
 }) {
   return (
     <SidebarProvider>
-      <AppSidebar
-        email={email}
-        budget={budget}
-        budgets={budgets}
-        accounts={accounts}
-      />
+      <AppSidebar budget={budget} budgets={budgets} accounts={accounts} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           {/* Desktop toggle lives in the sidebar header; the sidebar is a sheet on mobile, so keep one here. */}
@@ -46,6 +42,7 @@ export function AppShell({
               dateFormat={budget.dateFormat}
             />
             <ThemeToggle />
+            <UserMenu email={email} />
           </div>
         </header>
         {invites.length > 0 ? (
