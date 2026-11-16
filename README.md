@@ -45,6 +45,14 @@ App runs at http://localhost:3000. Check DB wiring: http://localhost:3000/api/he
 - Fully separate from any hosted/production project. Nothing syncs between them.
 - Stop it with `pnpm supabase:stop` to free RAM. Reset the DB with `pnpm exec supabase db reset`, then `pnpm db:migrate`.
 
+### Auth
+
+Email + password and magic-link sign in via Supabase Auth. Routes: `/login`, `/signup`, `/auth/callback`; everything under `src/routes/_authed/` requires a session (`/budget` for now). Server functions that touch user data must call `requireUser()` from `src/server/require-user.ts`.
+
+Local emails (magic links, confirmations) are not really sent. Open the inbox at http://127.0.0.1:54324.
+
+Hosted Supabase: in the dashboard under Authentication > URL Configuration, set the Site URL to your Vercel domain and add `https://<your-domain>/auth/callback` to Redirect URLs.
+
 ### Database workflow
 
 Schema lives in `src/db/schema/*.ts` (Drizzle). After changing it:
