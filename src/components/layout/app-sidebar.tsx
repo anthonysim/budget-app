@@ -18,6 +18,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from '#/components/ui/sidebar'
 import { BudgetSwitcher } from '#/components/layout/budget-switcher'
 import { UserMenu } from '#/components/layout/user-menu'
@@ -68,12 +69,13 @@ export function AppSidebar({
 }) {
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
+      <SidebarHeader className="flex-row items-center group-data-[collapsible=icon]:flex-col-reverse">
+        <SidebarMenu className="min-w-0 flex-1">
           <SidebarMenuItem>
             <BudgetSwitcher current={budget} budgets={budgets} />
           </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarTrigger aria-label="Toggle sidebar" className="shrink-0" />
       </SidebarHeader>
 
       <SidebarContent>
