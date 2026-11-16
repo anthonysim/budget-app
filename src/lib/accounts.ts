@@ -71,6 +71,9 @@ export const updateAccountSchema = z.object({
   accountId: z.uuid(),
   name: accountNameSchema,
   note: z.string().trim().max(500).nullable(),
+  /** Debt accounts only; ignored for other types. Basis points: 1999 = 19.99%. */
+  aprBps: z.number().int().min(0).max(100_000).nullable().optional(),
+  minPayment: z.number().int().min(0).max(1e12).nullable().optional(),
 })
 
 export const accountRefSchema = z.object({

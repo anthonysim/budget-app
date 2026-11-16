@@ -7,6 +7,7 @@ import { Money } from '#/components/accounts/money'
 import { NotFoundView } from '#/components/not-found-view'
 import { Button } from '#/components/ui/button'
 import { ACCOUNT_TYPE_INFO } from '#/lib/accounts'
+import { LoanPlanner } from '#/components/accounts/loan-planner'
 import { ImportDialog } from '#/components/import/import-dialog'
 import { approveTransactions } from '#/server/import'
 import { ReconcileDialog } from '#/components/accounts/reconcile-dialog'
@@ -19,6 +20,12 @@ const layout = getRouteApi('/_authed/budgets/$budgetId')
 export const Route = createFileRoute(
   '/_authed/budgets/$budgetId/accounts/$accountId',
 )({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q:
+      typeof search.q === 'string' && search.q !== ''
+        ? search.q.slice(0, 100)
+        : undefined,
+  }),
   loader: ({ params }) =>
     loadRegister({
       data: { budgetId: params.budgetId, accountId: params.accountId },
@@ -28,6 +35,7 @@ export const Route = createFileRoute(
 
 function AccountPage() {
   const { accountId } = Route.useParams()
+  const { q } = Route.useSearch()
   const register = Route.useLoaderData()
   const { budget, accounts } = layout.useLoaderData()
   const router = useRouter()
@@ -90,6 +98,9 @@ function AccountPage() {
               accountId={account.id}
               name={account.name}
               note={account.note}
+              debt={ACCOUNT_TYPE_INFO[account.type].debt}
+              aprBps={account.aprBps}
+              minPayment={account.minPayment}
             >
               <Button variant="outline">
                 <PencilIcon /> Edit
@@ -161,7 +172,19 @@ function AccountPage() {
         ))}
       </dl>
 
+      {ACCOUNT_TYPE_INFO[account.type].debt && account.workingBalance < 0 ? (
+        <LoanPlanner
+          key={`${account.aprBps}-${account.minPayment}`}
+          owed={-account.workingBalance}
+          aprBps={account.aprBps}
+          minPayment={account.minPayment}
+          currency={budget.currency}
+        />
+      ) : null}
+
       <Register
+        key={q}
+        initialQuery={q}
         budget={budget}
         accounts={accounts}
         data={register}

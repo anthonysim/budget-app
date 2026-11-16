@@ -155,6 +155,34 @@
       "when": 1794801818345,
       "tag": "0021_import_rules_fks_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794803041079,
+      "tag": "0022_extras",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794803042248,
+      "tag": "0023_extras_checks_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794803662788,
+      "tag": "0024_budget_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794803665458,
+      "tag": "0025_budget_invites_rls",
+      "breakpoints": true
     }
   ]
 }
