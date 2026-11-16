@@ -13,11 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedBudgetRouteImport } from './routes/_authed/budget'
-import { Route as AuthedReportsRouteImport } from './routes/_authed/reports'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthedBudgetsBudgetIdRouteImport } from './routes/_authed/budgets/$budgetId'
+import { Route as AuthedBudgetsNewRouteImport } from './routes/_authed/budgets/new'
+import { Route as AuthedBudgetsBudgetIdAccountsRouteImport } from './routes/_authed/budgets/$budgetId/accounts'
+import { Route as AuthedBudgetsBudgetIdBudgetRouteImport } from './routes/_authed/budgets/$budgetId/budget'
+import { Route as AuthedBudgetsBudgetIdReportsRouteImport } from './routes/_authed/budgets/$budgetId/reports'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,19 +41,9 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedAccountsRoute = AuthedAccountsRouteImport.update({
-  id: '/accounts',
-  path: '/accounts',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedBudgetRoute = AuthedBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedReportsRoute = AuthedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
   getParentRoute: () => AuthedRoute,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -63,26 +56,60 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedBudgetsBudgetIdRoute = AuthedBudgetsBudgetIdRouteImport.update({
+  id: '/budgets/$budgetId',
+  path: '/budgets/$budgetId',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedBudgetsNewRoute = AuthedBudgetsNewRouteImport.update({
+  id: '/budgets/new',
+  path: '/budgets/new',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedBudgetsBudgetIdAccountsRoute =
+  AuthedBudgetsBudgetIdAccountsRouteImport.update({
+    id: '/accounts',
+    path: '/accounts',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
+const AuthedBudgetsBudgetIdBudgetRoute =
+  AuthedBudgetsBudgetIdBudgetRouteImport.update({
+    id: '/budget',
+    path: '/budget',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
+const AuthedBudgetsBudgetIdReportsRoute =
+  AuthedBudgetsBudgetIdReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/accounts': typeof AuthedAccountsRoute
   '/budget': typeof AuthedBudgetRoute
-  '/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
+  '/budgets/new': typeof AuthedBudgetsNewRoute
+  '/budgets/$budgetId/accounts': typeof AuthedBudgetsBudgetIdAccountsRoute
+  '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
+  '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/accounts': typeof AuthedAccountsRoute
   '/budget': typeof AuthedBudgetRoute
-  '/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
+  '/budgets/new': typeof AuthedBudgetsNewRoute
+  '/budgets/$budgetId/accounts': typeof AuthedBudgetsBudgetIdAccountsRoute
+  '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
+  '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +117,14 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/budget': typeof AuthedBudgetRoute
-  '/_authed/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authed/budgets/$budgetId': typeof AuthedBudgetsBudgetIdRouteWithChildren
+  '/_authed/budgets/new': typeof AuthedBudgetsNewRoute
+  '/_authed/budgets/$budgetId/accounts': typeof AuthedBudgetsBudgetIdAccountsRoute
+  '/_authed/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
+  '/_authed/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,32 +132,41 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/accounts'
     | '/budget'
-    | '/reports'
     | '/api/health'
     | '/auth/callback'
+    | '/budgets/$budgetId'
+    | '/budgets/new'
+    | '/budgets/$budgetId/accounts'
+    | '/budgets/$budgetId/budget'
+    | '/budgets/$budgetId/reports'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
-    | '/accounts'
     | '/budget'
-    | '/reports'
     | '/api/health'
     | '/auth/callback'
+    | '/budgets/$budgetId'
+    | '/budgets/new'
+    | '/budgets/$budgetId/accounts'
+    | '/budgets/$budgetId/budget'
+    | '/budgets/$budgetId/reports'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/login'
     | '/signup'
-    | '/_authed/accounts'
     | '/_authed/budget'
-    | '/_authed/reports'
     | '/api/health'
     | '/auth/callback'
+    | '/_authed/budgets/$budgetId'
+    | '/_authed/budgets/new'
+    | '/_authed/budgets/$budgetId/accounts'
+    | '/_authed/budgets/$budgetId/budget'
+    | '/_authed/budgets/$budgetId/reports'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -169,25 +208,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/accounts': {
-      id: '/_authed/accounts'
-      path: '/accounts'
-      fullPath: '/accounts'
-      preLoaderRoute: typeof AuthedAccountsRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/budget': {
       id: '/_authed/budget'
       path: '/budget'
       fullPath: '/budget'
       preLoaderRoute: typeof AuthedBudgetRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/reports': {
-      id: '/_authed/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthedReportsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/api/health': {
@@ -204,19 +229,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/budgets/$budgetId': {
+      id: '/_authed/budgets/$budgetId'
+      path: '/budgets/$budgetId'
+      fullPath: '/budgets/$budgetId'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/budgets/new': {
+      id: '/_authed/budgets/new'
+      path: '/budgets/new'
+      fullPath: '/budgets/new'
+      preLoaderRoute: typeof AuthedBudgetsNewRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/budgets/$budgetId/accounts': {
+      id: '/_authed/budgets/$budgetId/accounts'
+      path: '/accounts'
+      fullPath: '/budgets/$budgetId/accounts'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdAccountsRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
+    '/_authed/budgets/$budgetId/budget': {
+      id: '/_authed/budgets/$budgetId/budget'
+      path: '/budget'
+      fullPath: '/budgets/$budgetId/budget'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdBudgetRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
+    '/_authed/budgets/$budgetId/reports': {
+      id: '/_authed/budgets/$budgetId/reports'
+      path: '/reports'
+      fullPath: '/budgets/$budgetId/reports'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdReportsRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
   }
 }
 
+interface AuthedBudgetsBudgetIdRouteChildren {
+  AuthedBudgetsBudgetIdAccountsRoute: typeof AuthedBudgetsBudgetIdAccountsRoute
+  AuthedBudgetsBudgetIdBudgetRoute: typeof AuthedBudgetsBudgetIdBudgetRoute
+  AuthedBudgetsBudgetIdReportsRoute: typeof AuthedBudgetsBudgetIdReportsRoute
+}
+
+const AuthedBudgetsBudgetIdRouteChildren: AuthedBudgetsBudgetIdRouteChildren = {
+  AuthedBudgetsBudgetIdAccountsRoute: AuthedBudgetsBudgetIdAccountsRoute,
+  AuthedBudgetsBudgetIdBudgetRoute: AuthedBudgetsBudgetIdBudgetRoute,
+  AuthedBudgetsBudgetIdReportsRoute: AuthedBudgetsBudgetIdReportsRoute,
+}
+
+const AuthedBudgetsBudgetIdRouteWithChildren =
+  AuthedBudgetsBudgetIdRoute._addFileChildren(
+    AuthedBudgetsBudgetIdRouteChildren,
+  )
+
 interface AuthedRouteChildren {
-  AuthedAccountsRoute: typeof AuthedAccountsRoute
   AuthedBudgetRoute: typeof AuthedBudgetRoute
-  AuthedReportsRoute: typeof AuthedReportsRoute
+  AuthedBudgetsBudgetIdRoute: typeof AuthedBudgetsBudgetIdRouteWithChildren
+  AuthedBudgetsNewRoute: typeof AuthedBudgetsNewRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
-  AuthedAccountsRoute: AuthedAccountsRoute,
   AuthedBudgetRoute: AuthedBudgetRoute,
-  AuthedReportsRoute: AuthedReportsRoute,
+  AuthedBudgetsBudgetIdRoute: AuthedBudgetsBudgetIdRouteWithChildren,
+  AuthedBudgetsNewRoute: AuthedBudgetsNewRoute,
 }
 
 const AuthedRouteWithChildren =

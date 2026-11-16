@@ -1,16 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { listBudgets } from '#/server/budgets'
 
+/** /budget is a stable entry point: send the user to their first budget, or to create one. */
 export const Route = createFileRoute('/_authed/budget')({
-  component: BudgetPage,
+  beforeLoad: async () => {
+    const [first] = await listBudgets()
+    if (!first) throw redirect({ to: '/budgets/new' })
+    throw redirect({
+      to: '/budgets/$budgetId/budget',
+      params: { budgetId: first.id },
+    })
+  },
 })
-
-function BudgetPage() {
-  return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">Budget</h1>
-      <p className="text-muted-foreground mt-2 text-sm">
-        Your budget will show up here.
-      </p>
-    </main>
-  )
-}

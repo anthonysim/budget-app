@@ -13,25 +13,35 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '#/components/ui/sidebar'
+import { BudgetSwitcher } from '#/components/layout/budget-switcher'
 import { UserMenu } from '#/components/layout/user-menu'
+import type { BudgetSummary } from '#/components/budgets/budget-types'
 
 const NAV = [
-  { to: '/budget', label: 'Budget', icon: WalletIcon },
-  { to: '/reports', label: 'Reports', icon: BarChart3Icon },
-  { to: '/accounts', label: 'All Accounts', icon: LandmarkIcon },
+  { to: '/budgets/$budgetId/budget', label: 'Budget', icon: WalletIcon },
+  { to: '/budgets/$budgetId/reports', label: 'Reports', icon: BarChart3Icon },
+  {
+    to: '/budgets/$budgetId/accounts',
+    label: 'All Accounts',
+    icon: LandmarkIcon,
+  },
 ] as const
 
-export function AppSidebar({ email }: { email: string }) {
+export function AppSidebar({
+  email,
+  budget,
+  budgets,
+}: {
+  email: string
+  budget: BudgetSummary
+  budgets: Array<BudgetSummary>
+}) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            {/* Budget switcher arrives with multi-budget support (PR 5) */}
-            <SidebarMenuButton size="lg" tooltip="My Budget">
-              <WalletIcon />
-              <span className="truncate font-semibold">My Budget</span>
-            </SidebarMenuButton>
+            <BudgetSwitcher current={budget} budgets={budgets} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -43,7 +53,11 @@ export function AppSidebar({ email }: { email: string }) {
               {NAV.map(({ to, label, icon: Icon }) => (
                 <SidebarMenuItem key={to}>
                   <SidebarMenuButton asChild tooltip={label}>
-                    <Link to={to} activeProps={{ 'data-active': true }}>
+                    <Link
+                      to={to}
+                      params={{ budgetId: budget.id }}
+                      activeProps={{ 'data-active': true }}
+                    >
                       <Icon />
                       <span>{label}</span>
                     </Link>
