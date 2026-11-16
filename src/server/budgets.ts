@@ -9,6 +9,7 @@ import {
 } from '#/lib/budget-schemas'
 import { firstOfMonth } from '#/lib/month'
 import { requireBudgetRole } from '#/server/budget-access'
+import { queryAccounts } from '#/server/accounts-query'
 import { requireUser } from '#/server/require-user'
 
 export const listBudgets = createServerFn({ method: 'GET' }).handler(
@@ -28,12 +29,15 @@ export const listBudgets = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-/** Returns the budget if the caller is a member, otherwise null. */
-export const getBudget = createServerFn({ method: 'GET' })
+/**
+ * One round trip for the budget layout: the budget plus its accounts with balances.
+ * Returns null if the caller is not a member (the route turns that into a 404).
+ */
+export const loadBudgetShell = createServerFn({ method: 'GET' })
   .validator(budgetIdSchema)
   .handler(async ({ data }) => {
     const user = await requireUser()
-    const [row] = await db()
+    const [budget] = await db()
       .select({
         id: budgets.id,
         name: budgets.name,
@@ -51,7 +55,8 @@ export const getBudget = createServerFn({ method: 'GET' })
         ),
       )
       .limit(1)
-    return row ?? null
+    if (!budget) return null
+    return { budget, accounts: await queryAccounts(data.budgetId) }
   })
 
 export const createBudget = createServerFn({ method: 'POST' })

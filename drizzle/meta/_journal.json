@@ -29,6 +29,20 @@
       "when": 1794795146872,
       "tag": "0003_budgets_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794795510839,
+      "tag": "0004_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794795512316,
+      "tag": "0005_accounts_rls",
+      "breakpoints": true
     }
   ]
 }

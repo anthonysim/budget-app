@@ -3,6 +3,7 @@ import {
   dollarsToMilliunits,
   formatMilliunits,
   milliunitsToDollars,
+  parseMoneyInput,
 } from './money'
 
 describe('money', () => {
@@ -20,5 +21,17 @@ describe('money', () => {
   it('formats milliunits as currency', () => {
     expect(formatMilliunits(1234560)).toBe('$1,234.56')
     expect(formatMilliunits(-5000)).toBe('-$5.00')
+  })
+
+  it('parses money input', () => {
+    expect(parseMoneyInput('$1,234.56')).toBe(1234560)
+    expect(parseMoneyInput('-50')).toBe(-50000)
+    expect(parseMoneyInput('12.5')).toBe(12500)
+    expect(parseMoneyInput('.75')).toBe(750)
+    expect(parseMoneyInput('0')).toBe(0)
+    expect(parseMoneyInput('')).toBeNull()
+    expect(parseMoneyInput('abc')).toBeNull()
+    expect(parseMoneyInput('1.2345')).toBeNull()
+    expect(parseMoneyInput('1.2.3')).toBeNull()
   })
 })
