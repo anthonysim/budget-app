@@ -44,6 +44,13 @@ export const updateCategorySchema = z.object({
 
 export const categoryRefSchema = z.object({ budgetId, categoryId: z.uuid() })
 
+export const deleteCategorySchema = z.object({
+  budgetId,
+  categoryId: z.uuid(),
+  /** Move this category's transactions here first. Omit to leave them uncategorized. */
+  reassignToCategoryId: z.uuid().optional(),
+})
+
 export const reorderCategoriesSchema = z.object({
   budgetId,
   groupId: z.uuid(),

@@ -1,10 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, categoryGroups } from '#/db/schema'
+import { categories, categoryGroups, transactions } from '#/db/schema'
 import { budgetIdSchema } from '#/lib/budget-schemas'
 import {
-  categoryRefSchema,
+  deleteCategorySchema,
   createCategorySchema,
   createGroupSchema,
   groupRefSchema,
@@ -175,18 +175,36 @@ export const updateCategory = createServerFn({ method: 'POST' })
   })
 
 export const deleteCategory = createServerFn({ method: 'POST' })
-  .validator(categoryRefSchema)
+  .validator(deleteCategorySchema)
   .handler(async ({ data }) => {
     await requireBudgetRole(data.budgetId, 'editor')
-    await db()
-      .delete(categories)
-      .where(
-        and(
-          eq(categories.id, data.categoryId),
-          eq(categories.budgetId, data.budgetId),
-          sql`${categories.systemKind} is null`,
-        ),
-      )
+    if (data.reassignToCategoryId === data.categoryId) {
+      throw new Error('Choose a different category')
+    }
+    await db().transaction(async (tx) => {
+      if (data.reassignToCategoryId) {
+        // the composite FK rejects a target category from another budget
+        await tx
+          .update(transactions)
+          .set({ categoryId: data.reassignToCategoryId })
+          .where(
+            and(
+              eq(transactions.budgetId, data.budgetId),
+              eq(transactions.categoryId, data.categoryId),
+            ),
+          )
+      }
+      // any remaining references become uncategorized via ON DELETE SET NULL
+      await tx
+        .delete(categories)
+        .where(
+          and(
+            eq(categories.id, data.categoryId),
+            eq(categories.budgetId, data.budgetId),
+            sql`${categories.systemKind} is null`,
+          ),
+        )
+    })
   })
 
 export const reorderCategories = createServerFn({ method: 'POST' })

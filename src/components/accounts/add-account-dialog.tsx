@@ -28,6 +28,7 @@ import {
   accountNameSchema,
 } from '#/lib/accounts'
 import type { AccountType } from '#/lib/accounts'
+import { todayString } from '#/lib/date'
 import { parseMoneyInput } from '#/lib/money'
 import { createAccount } from '#/server/accounts'
 
@@ -69,7 +70,13 @@ export function AddAccountDialog({
     startTransition(async () => {
       try {
         const { id } = await createAccount({
-          data: { budgetId, name: name.data, type, startingBalance: balance },
+          data: {
+            budgetId,
+            name: name.data,
+            type,
+            startingBalance: balance,
+            startingDate: todayString(),
+          },
         })
         await router.invalidate()
         toast.success('Account added')

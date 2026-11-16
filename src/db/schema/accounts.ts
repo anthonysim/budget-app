@@ -31,6 +31,23 @@ export const clearedStatus = pgEnum('cleared_status', [
   'reconciled',
 ])
 
+export const payees = pgTable(
+  'payees',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    budgetId: uuid('budget_id')
+      .notNull()
+      .references(() => budgets.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    /** Category last used with this payee; pre-fills new transactions. */
+    lastCategoryId: uuid('last_category_id'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique('payees_budget_id_id_unique').on(t.budgetId, t.id)],
+).enableRLS()
+
 export const accounts = pgTable(
   'accounts',
   {
@@ -65,8 +82,11 @@ export const transactions = pgTable(
     date: date('date', { mode: 'string' }).notNull(),
     /** Signed milliunits: inflow positive, outflow negative. */
     amount: bigint('amount', { mode: 'number' }).notNull(),
+    payeeId: uuid('payee_id'),
+    categoryId: uuid('category_id'),
     memo: text('memo'),
     cleared: clearedStatus('cleared').notNull().default('uncleared'),
+    approved: boolean('approved').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

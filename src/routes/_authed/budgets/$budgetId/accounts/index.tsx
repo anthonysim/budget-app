@@ -34,13 +34,23 @@ function AccountsPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-8 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">All Accounts</h1>
-        {canEdit ? (
-          <AddAccountDialog budgetId={budget.id}>
-            <Button>
-              <PlusIcon /> Add account
-            </Button>
-          </AddAccountDialog>
-        ) : null}
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link
+              to="/budgets/$budgetId/transactions"
+              params={{ budgetId: budget.id }}
+            >
+              All transactions
+            </Link>
+          </Button>
+          {canEdit ? (
+            <AddAccountDialog budgetId={budget.id}>
+              <Button>
+                <PlusIcon /> Add account
+              </Button>
+            </AddAccountDialog>
+          ) : null}
+        </div>
       </div>
 
       {accounts.length === 0 ? (
