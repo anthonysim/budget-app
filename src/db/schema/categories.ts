@@ -22,6 +22,8 @@ export const categoryGroups = pgTable(
     hidden: boolean('hidden').notNull().default(false),
     /** System groups (the Inflow group) cannot be edited or deleted. */
     system: boolean('system').notNull().default(false),
+    /** 'inflow' or 'credit_card_payments' for system groups. */
+    systemKind: text('system_kind'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -39,8 +41,10 @@ export const categories = pgTable(
     sort: integer('sort').notNull().default(0),
     hidden: boolean('hidden').notNull().default(false),
     note: text('note'),
-    /** 'inflow' marks the Ready to Assign income category. */
+    /** 'inflow' = Ready to Assign income category, 'cc_payment' = a credit card payment category. */
     systemKind: text('system_kind'),
+    /** For credit card payment categories: the card account they belong to. */
+    linkedAccountId: uuid('linked_account_id'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

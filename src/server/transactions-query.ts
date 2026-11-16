@@ -1,4 +1,5 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import { db } from '#/db'
 import { accounts, categories, payees, transactions } from '#/db/schema'
 import type { ClearedStatus } from '#/lib/transactions'
@@ -16,6 +17,8 @@ export interface TransactionRow {
   payeeName: string | null
   categoryId: string | null
   categoryName: string | null
+  /** Set when this row is one side of a transfer. */
+  transferAccountId: string | null
 }
 
 /** Oldest first (date, then creation order). One account, or all accounts in the budget. */
@@ -23,6 +26,7 @@ export async function queryTransactions(
   budgetId: string,
   accountId?: string,
 ): Promise<Array<TransactionRow>> {
+  const transferAccount = alias(accounts, 'transfer_account')
   return db()
     .select({
       id: transactions.id,
@@ -32,14 +36,21 @@ export async function queryTransactions(
       amount: transactions.amount,
       memo: transactions.memo,
       cleared: transactions.cleared,
-      payeeName: payees.name,
+      payeeName: sql<
+        string | null
+      >`case when ${transactions.transferAccountId} is not null then 'Transfer: ' || ${transferAccount.name} else ${payees.name} end`,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
+      transferAccountId: transactions.transferAccountId,
     })
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .leftJoin(payees, eq(payees.id, transactions.payeeId))
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(
+      transferAccount,
+      eq(transferAccount.id, transactions.transferAccountId),
+    )
     .where(
       and(
         eq(transactions.budgetId, budgetId),

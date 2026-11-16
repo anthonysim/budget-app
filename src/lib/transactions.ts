@@ -21,6 +21,8 @@ const base = {
   /** Payee name; created on the fly if it does not exist. Empty = no payee. */
   payeeName: payeeNameSchema,
   categoryId: z.uuid().nullable(),
+  /** Set to make this a transfer to/from another account (payeeName is then ignored). */
+  transferAccountId: z.uuid().nullable(),
   memo: z.string().trim().max(500).nullable(),
   /** Signed milliunits: inflow positive, outflow negative. */
   amount: z.number().int().min(-1e12).max(1e12),
@@ -64,6 +66,7 @@ export interface RegisterRow {
   cleared: ClearedStatus
   payeeId: string | null
   categoryId: string | null
+  transferAccountId: string | null
 }
 
 /** Amount split into the two register columns. Zero shows as an empty outflow. */

@@ -7,6 +7,7 @@ import { Input } from '#/components/ui/input'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
+import { parseTransferPayee } from '#/lib/transfers'
 import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
 import { combineAmount, dateSchema, splitAmount } from '#/lib/transactions'
 import { createTransaction, updateTransaction } from '#/server/transactions'
@@ -73,7 +74,15 @@ export function EditRow({
   )
 
   const account = accounts.find((a) => a.id === accountId)
-  const categoryApplies = account?.onBudget ?? true
+  const transferAccountId = parseTransferPayee(payeeName, accounts)
+  const transferTarget = accounts.find((a) => a.id === transferAccountId)
+  const isTransfer =
+    transferTarget !== undefined && transferTarget.id !== accountId
+  // Categories apply to on-budget accounts. Transfers between two on-budget accounts are
+  // budget-neutral (credit card payments are categorized automatically); transfers to a
+  // tracking account are real spending/income and keep their category.
+  const categoryApplies =
+    (account?.onBudget ?? true) && (!isTransfer || !transferTarget.onBudget)
 
   function onPayeeChange(name: string) {
     setPayeeName(name)
@@ -106,8 +115,9 @@ export function EditRow({
       budgetId,
       accountId,
       date,
-      payeeName,
+      payeeName: isTransfer ? '' : payeeName,
       categoryId: categoryApplies && categoryId !== '' ? categoryId : null,
+      transferAccountId: isTransfer ? transferTarget.id : null,
       memo: memo.trim() === '' ? null : memo,
       amount: combineAmount(out, inn),
       cleared: cleared ? ('cleared' as const) : ('uncleared' as const),

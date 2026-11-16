@@ -23,6 +23,7 @@ export interface CategoryGroupRow {
 /** User-visible groups (system groups excluded) with their categories, in sort order. */
 export async function queryCategoryGroups(
   budgetId: string,
+  options: { includeCreditCardPayments?: boolean } = {},
 ): Promise<Array<CategoryGroupRow>> {
   const [groups, cats, usage] = await Promise.all([
     db()
@@ -31,6 +32,7 @@ export async function queryCategoryGroups(
         name: categoryGroups.name,
         hidden: categoryGroups.hidden,
         system: categoryGroups.system,
+        systemKind: categoryGroups.systemKind,
       })
       .from(categoryGroups)
       .where(eq(categoryGroups.budgetId, budgetId))
@@ -64,8 +66,13 @@ export async function queryCategoryGroups(
     byGroup.set(groupId, list)
   }
   return groups
-    .filter((g) => !g.system)
-    .map(({ system: _system, ...g }) => ({
+    .filter(
+      (g) =>
+        !g.system ||
+        (options.includeCreditCardPayments &&
+          g.systemKind === 'credit_card_payments'),
+    )
+    .map(({ system: _system, systemKind: _kind, ...g }) => ({
       ...g,
       categories: byGroup.get(g.id) ?? [],
     }))

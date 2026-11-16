@@ -16,6 +16,7 @@ import type { RegisterMeta } from '#/components/register/columns'
 import { EditRow } from '#/components/register/edit-row'
 import { NativeSelect } from '#/components/register/native-select'
 import { matchesSearch, runningBalances } from '#/lib/transactions'
+import { transferLabel } from '#/lib/transfers'
 import {
   bulkUpdateTransactions,
   deleteTransactions,
@@ -119,6 +120,7 @@ export function Register({
               date: t.date,
               payeeName: t.payeeName ?? '',
               categoryId: t.categoryId,
+              transferAccountId: t.transferAccountId,
               memo: t.memo,
               amount: t.amount,
               cleared: t.cleared === 'cleared' ? 'uncleared' : 'cleared',
@@ -249,6 +251,11 @@ export function Register({
       ) : null}
 
       <datalist id="register-payees">
+        {accounts
+          .filter((a) => !a.closed && a.id !== accountId)
+          .map((a) => (
+            <option key={`transfer-${a.id}`} value={transferLabel(a.name)} />
+          ))}
         {data.payees.map((p) => (
           <option key={p.id} value={p.name} />
         ))}

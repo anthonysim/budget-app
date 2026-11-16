@@ -84,6 +84,9 @@ export const transactions = pgTable(
     amount: bigint('amount', { mode: 'number' }).notNull(),
     payeeId: uuid('payee_id'),
     categoryId: uuid('category_id'),
+    /** Set on both sides of a transfer; the paired transaction lives in the other account. */
+    transferAccountId: uuid('transfer_account_id'),
+    transferTransactionId: uuid('transfer_transaction_id'),
     memo: text('memo'),
     cleared: clearedStatus('cleared').notNull().default('uncleared'),
     approved: boolean('approved').notNull().default(true),
@@ -92,6 +95,7 @@ export const transactions = pgTable(
       .defaultNow(),
   },
   (t) => [
+    unique('transactions_budget_id_id_unique').on(t.budgetId, t.id),
     foreignKey({
       columns: [t.budgetId, t.accountId],
       foreignColumns: [accounts.budgetId, accounts.id],

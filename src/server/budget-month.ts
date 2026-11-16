@@ -8,6 +8,7 @@ import {
   setAssignmentsSchema,
 } from '#/lib/budget-month'
 import { requireBudgetRole } from '#/server/budget-access'
+import type { Db } from '#/server/db-types'
 import { queryBudgetMonth } from '#/server/budget-month-query'
 
 export const loadBudgetMonth = createServerFn({ method: 'GET' })
@@ -17,9 +18,10 @@ export const loadBudgetMonth = createServerFn({ method: 'GET' })
     return queryBudgetMonth(data.budgetId, data.month)
   })
 
-/** The categories must belong to the budget and must not be the system Inflow category. */
+/** The categories must belong to the budget and must not be the system Inflow category
+ * (credit card payment categories are allowed). */
 async function assertAssignable(
-  tx: Pick<ReturnType<typeof db>, 'select'>,
+  tx: Pick<Db, 'select'>,
   budgetId: string,
   categoryIds: Array<string>,
 ) {
@@ -31,7 +33,7 @@ async function assertAssignable(
       and(
         eq(categories.budgetId, budgetId),
         inArray(categories.id, unique),
-        sql`${categories.systemKind} is null`,
+        sql`${categories.systemKind} is distinct from 'inflow'`,
       ),
     )
   if (rows.length !== unique.length) throw new Error('Not found')

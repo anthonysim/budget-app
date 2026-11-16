@@ -47,6 +47,7 @@ describe('transactions lib', () => {
       date: '2026-11-15',
       payeeName: ' Whole Foods ',
       categoryId: null,
+      transferAccountId: null,
       memo: null,
       amount: -42500,
       cleared: 'uncleared',

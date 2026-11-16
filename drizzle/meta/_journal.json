@@ -85,6 +85,20 @@
       "when": 1794797453766,
       "tag": "0011_month_assignments_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794799028398,
+      "tag": "0012_transfers_cc",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794799032236,
+      "tag": "0013_transfers_cc_fks_backfill",
+      "breakpoints": true
     }
   ]
 }
