@@ -11,7 +11,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -21,7 +20,6 @@ import {
   SidebarTrigger,
 } from '#/components/ui/sidebar'
 import { BudgetSwitcher } from '#/components/layout/budget-switcher'
-import { UserMenu } from '#/components/layout/user-menu'
 import { SidebarAccounts } from '#/components/layout/sidebar-accounts'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
@@ -57,12 +55,10 @@ const NAV = [
 ] as const
 
 export function AppSidebar({
-  email,
   budget,
   budgets,
   accounts,
 }: {
-  email: string
   budget: BudgetSummary
   budgets: Array<BudgetSummary>
   accounts: Array<AccountWithBalances>
@@ -102,14 +98,6 @@ export function AppSidebar({
 
         <SidebarAccounts budget={budget} accounts={accounts} />
       </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <UserMenu email={email} />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
