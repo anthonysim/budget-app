@@ -255,7 +255,7 @@ export function BudgetGrid({
               const isCollapsed = collapsed.has(g.id)
               return (
                 <Fragment key={g.id}>
-                  <tr className="bg-muted/30 border-t font-medium">
+                  <tr className="bg-muted/70 border-t font-medium">
                     <td className="px-3 py-2">
                       <button
                         type="button"
