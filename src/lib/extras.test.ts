@@ -24,7 +24,8 @@ describe('search', () => {
 
 describe('flags', () => {
   it('every flag has a color', () => {
-    for (const f of FLAGS) expect(FLAG_COLORS[f]).toMatch(/^#[0-9a-f]{6}$/i)
+    for (const f of FLAGS)
+      expect(FLAG_COLORS[f]).toMatch(/^var\(--flag-[a-z]+\)$/)
   })
   it('validates setting and clearing flags', () => {
     expect(

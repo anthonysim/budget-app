@@ -118,12 +118,16 @@ function AccountGroup({
       </div>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground text-left">
+          <thead className="bg-balance-working/50 text-muted-foreground text-left">
             <tr>
               <th className="px-3 py-2 font-medium">Account</th>
-              <th className="px-3 py-2 text-right font-medium">Cleared</th>
+              <th className="bg-balance-cleared text-balance-cleared-foreground px-3 py-2 text-right font-medium">
+                Cleared
+              </th>
               <th className="px-3 py-2 text-right font-medium">Uncleared</th>
-              <th className="px-3 py-2 text-right font-medium">Working</th>
+              <th className="bg-balance-working px-3 py-2 text-right font-medium">
+                Working
+              </th>
               {canReorder ? <th className="w-20 px-3 py-2" /> : null}
             </tr>
           </thead>
@@ -142,13 +146,17 @@ function AccountGroup({
                     {ACCOUNT_TYPE_INFO[a.type].label}
                   </div>
                 </td>
-                <td className="px-3 py-2 text-right">
-                  <Money value={a.clearedBalance} currency={currency} />
+                <td className="bg-balance-cleared text-balance-cleared-foreground px-3 py-2 text-right">
+                  <Money
+                    value={a.clearedBalance}
+                    currency={currency}
+                    className="text-balance-cleared-foreground"
+                  />
                 </td>
                 <td className="px-3 py-2 text-right">
                   <Money value={a.unclearedBalance} currency={currency} />
                 </td>
-                <td className="px-3 py-2 text-right font-medium">
+                <td className="bg-balance-working/50 px-3 py-2 text-right font-medium">
                   <Money value={a.workingBalance} currency={currency} />
                 </td>
                 {canReorder ? (
