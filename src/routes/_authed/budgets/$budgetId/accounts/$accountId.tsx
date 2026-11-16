@@ -62,9 +62,24 @@ function AccountPage() {
   }
 
   const balances = [
-    { label: 'Cleared', value: account.clearedBalance },
-    { label: 'Uncleared', value: account.unclearedBalance },
-    { label: 'Working', value: account.workingBalance },
+    {
+      label: 'Cleared',
+      value: account.clearedBalance,
+      tint: 'bg-balance-cleared text-balance-cleared-foreground',
+      solid: true,
+    },
+    {
+      label: 'Uncleared',
+      value: account.unclearedBalance,
+      tint: '',
+      solid: false,
+    },
+    {
+      label: 'Working',
+      value: account.workingBalance,
+      tint: 'bg-balance-working',
+      solid: false,
+    },
   ]
 
   return (
@@ -163,10 +178,20 @@ function AccountPage() {
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {balances.map((b) => (
-          <div key={b.label} className="rounded-lg border p-4">
-            <dt className="text-muted-foreground text-sm">{b.label}</dt>
+          <div key={b.label} className={`rounded-lg border p-4 ${b.tint}`}>
+            <dt
+              className={`text-sm ${b.solid ? 'text-balance-cleared-foreground/80' : 'text-muted-foreground'}`}
+            >
+              {b.label}
+            </dt>
             <dd className="mt-1 text-xl font-semibold">
-              <Money value={b.value} currency={budget.currency} />
+              <Money
+                value={b.value}
+                currency={budget.currency}
+                className={
+                  b.solid ? 'text-balance-cleared-foreground' : undefined
+                }
+              />
             </dd>
           </div>
         ))}

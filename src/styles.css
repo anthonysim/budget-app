@@ -1,3 +1,8 @@
+/*
+ * Design tokens: every color the app paints lives in this file.
+ * Components use token utilities (bg-primary, bg-balance-cleared, ...) or
+ * var(--token), never palette classes or hex. To re-theme, edit :root / .dark.
+ */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -19,6 +24,17 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-overlay: var(--overlay);
+  --color-balance-cleared: var(--balance-cleared);
+  --color-balance-cleared-foreground: var(--balance-cleared-foreground);
+  --color-balance-working: var(--balance-working);
+  --color-flag-red: var(--flag-red);
+  --color-flag-orange: var(--flag-orange);
+  --color-flag-yellow: var(--flag-yellow);
+  --color-flag-green: var(--flag-green);
+  --color-flag-blue: var(--flag-blue);
+  --color-flag-purple: var(--flag-purple);
   --color-positive: var(--positive);
   --color-positive-soft: var(--positive-soft);
   --color-positive-foreground: var(--positive-foreground);
@@ -62,6 +78,22 @@
   --accent: oklch(0.946 0.026 278.7);
   --accent-foreground: oklch(0.414 0.19 270.4);
   --destructive: oklch(0.577 0.215 27.3);
+  --destructive-foreground: oklch(1 0 0);
+  --overlay: oklch(0 0 0 / 50%);
+  --balance-cleared: oklch(0.497 0.217 270.9);
+  --balance-cleared-foreground: oklch(1 0 0);
+  --balance-working: var(--muted);
+  --flag-red: #d03b3b;
+  --flag-orange: #ec835a;
+  --flag-yellow: #fab219;
+  --flag-green: #0ca30c;
+  --flag-blue: #3987e5;
+  --flag-purple: #9085e9;
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-ink-2: #52514e;
+  --chart-muted: #898781;
+  --chart-critical: #d03b3b;
   --border: oklch(0.929 0.011 274.9);
   --input: oklch(0.896 0.017 274.8);
   --ring: oklch(0.497 0.217 270.9 / 60%);
@@ -101,6 +133,22 @@
   --accent: oklch(0.287 0.054 275.1);
   --accent-foreground: oklch(0.894 0.052 280.5);
   --destructive: oklch(0.711 0.166 22.2);
+  --destructive-foreground: oklch(1 0 0);
+  --overlay: oklch(0 0 0 / 50%);
+  --balance-cleared: oklch(0.559 0.215 272.5);
+  --balance-cleared-foreground: oklch(1 0 0);
+  --balance-working: var(--muted);
+  --flag-red: #d03b3b;
+  --flag-orange: #ec835a;
+  --flag-yellow: #fab219;
+  --flag-green: #0ca30c;
+  --flag-blue: #3987e5;
+  --flag-purple: #9085e9;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-ink-2: #c3c2b7;
+  --chart-muted: #898781;
+  --chart-critical: #d03b3b;
   --border: oklch(0.289 0.032 274);
   --input: oklch(0.334 0.038 273.8);
   --ring: oklch(0.675 0.173 276 / 60%);
@@ -146,29 +194,16 @@
   }
 }
 
-/* Chart tokens (validated palette: blue/orange categorical, same hues stepped for dark). */
+/* Chart scope: --viz-* aliases resolve to the --chart-* tokens above, so charts re-theme with the app. */
 .viz-root {
   --viz-surface: var(--card);
   --viz-ink: var(--foreground);
-  --viz-ink-2: #52514e;
-  --viz-muted: #898781;
+  --viz-ink-2: var(--chart-ink-2);
+  --viz-muted: var(--chart-muted);
   --viz-grid: var(--border);
   --viz-axis: var(--input);
-  --viz-s1: #2a78d6; /* income / the single series */
-  --viz-s2: #eb6834; /* expense */
+  --viz-s1: var(--chart-1); /* income / the single series */
+  --viz-s2: var(--chart-2); /* expense */
   --viz-good: var(--positive);
-  --viz-critical: #d03b3b;
-}
-
-.dark .viz-root {
-  --viz-surface: var(--card);
-  --viz-ink: var(--foreground);
-  --viz-ink-2: #c3c2b7;
-  --viz-muted: #898781;
-  --viz-grid: var(--border);
-  --viz-axis: var(--input);
-  --viz-s1: #3987e5;
-  --viz-s2: #d95926;
-  --viz-good: var(--positive);
-  --viz-critical: #d03b3b;
+  --viz-critical: var(--chart-critical);
 }

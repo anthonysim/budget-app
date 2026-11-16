@@ -12,12 +12,12 @@ export const FLAGS = [
 export type Flag = (typeof FLAGS)[number]
 
 export const FLAG_COLORS: Record<Flag, string> = {
-  red: '#d03b3b',
-  orange: '#ec835a',
-  yellow: '#fab219',
-  green: '#0ca30c',
-  blue: '#3987e5',
-  purple: '#9085e9',
+  red: 'var(--flag-red)',
+  orange: 'var(--flag-orange)',
+  yellow: 'var(--flag-yellow)',
+  green: 'var(--flag-green)',
+  blue: 'var(--flag-blue)',
+  purple: 'var(--flag-purple)',
 }
 
 export const CLEARED_STATUSES = ['uncleared', 'cleared', 'reconciled'] as const
