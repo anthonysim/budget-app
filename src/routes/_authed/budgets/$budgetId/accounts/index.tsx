@@ -1,0 +1,175 @@
+import {
+  createFileRoute,
+  getRouteApi,
+  Link,
+  useRouter,
+} from '@tanstack/react-router'
+import { useTransition } from 'react'
+import { ArrowDownIcon, ArrowUpIcon, PlusIcon } from 'lucide-react'
+import { toast } from 'sonner'
+import { AddAccountDialog } from '#/components/accounts/add-account-dialog'
+import { Money } from '#/components/accounts/money'
+import { Button } from '#/components/ui/button'
+import { ACCOUNT_TYPE_INFO, moveWithinGroup } from '#/lib/accounts'
+import { reorderAccounts } from '#/server/accounts'
+import type { AccountWithBalances } from '#/server/accounts-query'
+
+export const Route = createFileRoute('/_authed/budgets/$budgetId/accounts/')({
+  component: AccountsPage,
+})
+
+const layout = getRouteApi('/_authed/budgets/$budgetId')
+
+function AccountsPage() {
+  const { budget, accounts } = layout.useLoaderData()
+  const canEdit = budget.role !== 'viewer'
+  const open = accounts.filter((a) => !a.closed)
+  const groups = [
+    { title: 'Budget accounts', items: open.filter((a) => a.onBudget) },
+    { title: 'Tracking accounts', items: open.filter((a) => !a.onBudget) },
+    { title: 'Closed accounts', items: accounts.filter((a) => a.closed) },
+  ]
+
+  return (
+    <main className="mx-auto flex max-w-4xl flex-col gap-8 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">All Accounts</h1>
+        {canEdit ? (
+          <AddAccountDialog budgetId={budget.id}>
+            <Button>
+              <PlusIcon /> Add account
+            </Button>
+          </AddAccountDialog>
+        ) : null}
+      </div>
+
+      {accounts.length === 0 ? (
+        <p className="text-muted-foreground text-sm">
+          No accounts yet. Add your first account to start tracking balances.
+        </p>
+      ) : null}
+
+      {groups.map((g) =>
+        g.items.length === 0 ? null : (
+          <AccountGroup
+            key={g.title}
+            title={g.title}
+            items={g.items}
+            allIds={accounts.map((a) => a.id)}
+            currency={budget.currency}
+            budgetId={budget.id}
+            canReorder={canEdit && g.title !== 'Closed accounts'}
+          />
+        ),
+      )}
+    </main>
+  )
+}
+
+function AccountGroup({
+  title,
+  items,
+  allIds,
+  currency,
+  budgetId,
+  canReorder,
+}: {
+  title: string
+  items: Array<AccountWithBalances>
+  allIds: Array<string>
+  currency: string
+  budgetId: string
+  canReorder: boolean
+}) {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const groupIds = items.map((a) => a.id)
+  const total = items.reduce((sum, a) => sum + a.workingBalance, 0)
+
+  function move(id: string, delta: -1 | 1) {
+    const next = moveWithinGroup(allIds, groupIds, id, delta)
+    startTransition(async () => {
+      try {
+        await reorderAccounts({ data: { budgetId, accountIds: next } })
+        await router.invalidate()
+      } catch {
+        toast.error('Could not reorder accounts')
+      }
+    })
+  }
+
+  return (
+    <section aria-labelledby={`group-${title}`} className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <h2 id={`group-${title}`} className="text-lg font-medium">
+          {title}
+        </h2>
+        <Money value={total} currency={currency} className="font-medium" />
+      </div>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-muted-foreground text-left">
+            <tr>
+              <th className="px-3 py-2 font-medium">Account</th>
+              <th className="px-3 py-2 text-right font-medium">Cleared</th>
+              <th className="px-3 py-2 text-right font-medium">Uncleared</th>
+              <th className="px-3 py-2 text-right font-medium">Working</th>
+              {canReorder ? <th className="w-20 px-3 py-2" /> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((a, i) => (
+              <tr key={a.id} className="border-t">
+                <td className="px-3 py-2">
+                  <Link
+                    to="/budgets/$budgetId/accounts/$accountId"
+                    params={{ budgetId, accountId: a.id }}
+                    className="font-medium hover:underline"
+                  >
+                    {a.name}
+                  </Link>
+                  <div className="text-muted-foreground text-xs">
+                    {ACCOUNT_TYPE_INFO[a.type].label}
+                  </div>
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Money value={a.clearedBalance} currency={currency} />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Money value={a.unclearedBalance} currency={currency} />
+                </td>
+                <td className="px-3 py-2 text-right font-medium">
+                  <Money value={a.workingBalance} currency={currency} />
+                </td>
+                {canReorder ? (
+                  <td className="px-3 py-2">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Move ${a.name} up`}
+                        disabled={pending || i === 0}
+                        onClick={() => move(a.id, -1)}
+                      >
+                        <ArrowUpIcon />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Move ${a.name} down`}
+                        disabled={pending || i === items.length - 1}
+                        onClick={() => move(a.id, 1)}
+                      >
+                        <ArrowDownIcon />
+                      </Button>
+                    </div>
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}

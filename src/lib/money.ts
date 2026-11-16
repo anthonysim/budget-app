@@ -22,3 +22,16 @@ export function formatMilliunits(
     currency,
   }).format(milliunitsToDollars(milliunits))
 }
+
+/**
+ * Parse user-typed money ("$1,234.56", "-50", "12.5") into milliunits.
+ * Returns null when the text is not a valid amount (max 3 decimals).
+ */
+export function parseMoneyInput(input: string): Milliunits | null {
+  const cleaned = input.trim().replace(/[$,\s]/g, '')
+  if (!/^-?(\d+\.?\d{0,3}|\.\d{1,3})$/.test(cleaned)) return null
+  const negative = cleaned.startsWith('-')
+  const [whole = '0', frac = ''] = cleaned.replace('-', '').split('.')
+  const milli = Number(whole || '0') * 1000 + Number((frac + '000').slice(0, 3))
+  return negative ? -milli : milli
+}
