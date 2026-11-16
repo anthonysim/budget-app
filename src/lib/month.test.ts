@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, compareMonths, firstOfMonth, formatMonth } from './month'
+import {
+  addMonths,
+  compareMonths,
+  firstOfMonth,
+  formatMonth,
+  monthFromParam,
+  monthToParam,
+} from './month'
 
 describe('month', () => {
   it('firstOfMonth', () => {
@@ -17,5 +24,12 @@ describe('month', () => {
   })
   it('formatMonth', () => {
     expect(formatMonth('2026-11-01')).toBe('November 2026')
+  })
+  it('converts month URL params', () => {
+    expect(monthFromParam('2026-11')).toBe('2026-11-01')
+    expect(monthFromParam('2026-13')).toBeNull()
+    expect(monthFromParam('2026-11-01')).toBeNull()
+    expect(monthFromParam(undefined)).toBeNull()
+    expect(monthToParam('2026-11-01')).toBe('2026-11')
   })
 })

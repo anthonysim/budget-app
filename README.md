@@ -83,6 +83,15 @@ Hosted Supabase: set `DATABASE_URL` to the Supavisor **transaction pooler** URL 
 
 Before opening a PR, run: `pnpm build && pnpm typecheck && pnpm lint && pnpm check && pnpm test` (same as CI).
 
+## Budget math
+
+Pure functions in `src/domain/budget-math.ts` (unit tested in `budget-math.test.ts`); all amounts are integer milliunits.
+
+- **Available** = carried-in + assigned + activity. Positive Available rolls to next month; negative resets to 0.
+- **Overspending** is "credit" up to what was spent on credit accounts that month, the rest is "cash". Only cash overspending reduces Ready to Assign, starting the next month. Credit overspending becomes card debt (credit card payment categories, a later PR).
+- **Ready to Assign** (month) = income through that month - assigned through that month - cash overspending of earlier months.
+- Assigned cells accept expressions relative to the current value: `+50`, `-20`, `*2`, `/2`, `100+25`.
+
 ## Adding shadcn/ui components
 
 ```bash

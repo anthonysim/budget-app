@@ -1,0 +1,67 @@
+import { z } from 'zod'
+
+export const monthSchema = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-01$/, 'Invalid month')
+
+export const loadBudgetMonthSchema = z.object({
+  budgetId: z.uuid(),
+  month: monthSchema,
+})
+
+const amount = z.number().int().min(-1e12).max(1e12)
+
+/** Absolute assigned values (used for edits and undo/redo). */
+export const setAssignmentsSchema = z.object({
+  budgetId: z.uuid(),
+  changes: z
+    .array(
+      z.object({
+        categoryId: z.uuid(),
+        month: monthSchema,
+        assigned: amount,
+      }),
+    )
+    .min(1)
+    .max(200),
+})
+
+/** Atomically moves money between two categories within a month. */
+export const moveMoneySchema = z
+  .object({
+    budgetId: z.uuid(),
+    month: monthSchema,
+    fromCategoryId: z.uuid(),
+    toCategoryId: z.uuid(),
+    amount: amount.refine((n) => n > 0, 'Amount must be positive'),
+  })
+  .refine((v) => v.fromCategoryId !== v.toCategoryId, {
+    message: 'Choose two different categories',
+  })
+
+export interface BudgetCategoryRow {
+  id: string
+  name: string
+  hidden: boolean
+  assigned: number
+  activity: number
+  available: number
+  overspent: 'cash' | 'credit' | null
+}
+
+export interface BudgetGroupRow {
+  id: string
+  name: string
+  hidden: boolean
+  assigned: number
+  activity: number
+  available: number
+  categories: Array<BudgetCategoryRow>
+}
+
+export interface BudgetMonthView {
+  month: string
+  readyToAssign: number
+  totals: { assigned: number; activity: number; available: number }
+  groups: Array<BudgetGroupRow>
+}

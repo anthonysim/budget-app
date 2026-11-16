@@ -28,3 +28,16 @@ export function formatMonth(month: MonthString, locale = 'en-US'): string {
     timeZone: 'UTC',
   }).format(new Date(Date.UTC(y, m - 1, 1)))
 }
+
+/** 'YYYY-MM' (URL form) -> 'YYYY-MM-01', or null if invalid. */
+export function monthFromParam(param: unknown): MonthString | null {
+  if (typeof param !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(param)) {
+    return null
+  }
+  return `${param}-01`
+}
+
+/** 'YYYY-MM-01' -> 'YYYY-MM' for URLs. */
+export function monthToParam(month: MonthString): string {
+  return month.slice(0, 7)
+}

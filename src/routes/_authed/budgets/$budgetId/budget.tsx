@@ -1,16 +1,32 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi } from '@tanstack/react-router'
+import { BudgetGrid } from '#/components/budget/budget-grid'
+import { firstOfMonth, monthFromParam } from '#/lib/month'
+import { loadBudgetMonth } from '#/server/budget-month'
 
 export const Route = createFileRoute('/_authed/budgets/$budgetId/budget')({
+  validateSearch: (search: Record<string, unknown>): { month?: string } => ({
+    month: monthFromParam(search.month) ? String(search.month) : undefined,
+  }),
+  loaderDeps: ({ search }) => ({ month: search.month }),
+  loader: ({ params, deps }) =>
+    loadBudgetMonth({
+      data: {
+        budgetId: params.budgetId,
+        month: monthFromParam(deps.month) ?? firstOfMonth(),
+      },
+    }),
   component: BudgetPage,
 })
 
+const layout = getRouteApi('/_authed/budgets/$budgetId')
+
 function BudgetPage() {
+  const view = Route.useLoaderData()
+  const { budget } = layout.useLoaderData()
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">Budget</h1>
-      <p className="text-muted-foreground mt-2 text-sm">
-        Your budget will show up here.
-      </p>
+    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+      <h1 className="sr-only">Budget</h1>
+      <BudgetGrid budget={budget} view={view} />
     </div>
   )
 }
