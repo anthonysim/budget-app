@@ -8,6 +8,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   Redo2Icon,
+  StickyNoteIcon,
   Undo2Icon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,6 +28,7 @@ import {
 } from '#/components/ui/dropdown-menu'
 import { AUTO_ASSIGN_LABELS, autoAssignChanges } from '#/lib/auto-assign'
 import type { AutoAssignAction } from '#/lib/auto-assign'
+import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
 import { RtaBanner } from '#/components/budget/rta-banner'
 import { setAssignments } from '#/server/budget-month'
@@ -224,6 +226,13 @@ export function BudgetGrid({
         ) : null}
       </div>
 
+      <MonthNote
+        budgetId={budget.id}
+        month={view.month}
+        note={view.monthNote}
+        canEdit={canEdit}
+      />
+
       <RtaBanner
         readyToAssign={view.readyToAssign}
         currency={budget.currency}
@@ -286,6 +295,18 @@ export function BudgetGrid({
                             }
                           >
                             {c.name}
+                            {c.note ? (
+                              <span
+                                className="text-muted-foreground ml-2 inline-flex items-center"
+                                title={c.note}
+                              >
+                                <StickyNoteIcon
+                                  className="size-3.5"
+                                  aria-hidden
+                                />
+                                <span className="sr-only">Note: {c.note}</span>
+                              </span>
+                            ) : null}
                             {c.target ? (
                               <TargetProgress
                                 target={c.target}

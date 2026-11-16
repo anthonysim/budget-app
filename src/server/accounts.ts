@@ -15,6 +15,7 @@ import { requireBudgetRole } from '#/server/budget-access'
 import { queryInflowCategoryId } from '#/server/categories-query'
 import { findOrCreatePayee } from '#/server/payees'
 import { ensurePaymentCategory } from '#/server/payment-categories'
+import { getAccount } from '#/server/transaction-writes'
 
 export const createAccount = createServerFn({ method: 'POST' })
   .validator(createAccountSchema)
@@ -73,9 +74,19 @@ export const updateAccount = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireBudgetRole(data.budgetId, 'editor')
     await db().transaction(async (tx) => {
+      const account = await getAccount(tx, data.budgetId, data.accountId)
+      // APR and minimum payment only make sense for debt accounts
+      const debt = ACCOUNT_TYPE_INFO[account.type].debt
       await tx
         .update(accounts)
-        .set({ name: data.name, note: data.note || null })
+        .set({
+          name: data.name,
+          note: data.note || null,
+          ...(debt && data.aprBps !== undefined ? { aprBps: data.aprBps } : {}),
+          ...(debt && data.minPayment !== undefined
+            ? { minPayment: data.minPayment }
+            : {}),
+        })
         .where(
           and(
             eq(accounts.id, data.accountId),
