@@ -23,13 +23,10 @@ export function AvailablePill({
       data-tone={tone}
       className={cn(
         'inline-block min-w-24 rounded-full px-3 py-0.5 text-right text-sm font-medium tabular-nums',
-        tone === 'green' &&
-          'bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-200',
+        tone === 'green' && 'bg-positive-soft text-positive-foreground',
         tone === 'grey' && 'bg-muted text-muted-foreground',
-        tone === 'red' &&
-          'bg-red-100 text-red-900 dark:bg-red-900/40 dark:text-red-200',
-        tone === 'yellow' &&
-          'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/40 dark:text-yellow-200',
+        tone === 'red' && 'bg-negative-soft text-negative-foreground',
+        tone === 'yellow' && 'bg-warning-soft text-warning-foreground',
       )}
     >
       <Money

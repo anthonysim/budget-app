@@ -68,7 +68,15 @@ export function SidebarAccounts({
                           params={{ budgetId: budget.id, accountId: a.id }}
                           activeProps={{ 'data-active': true }}
                         >
-                          <span className="truncate">{a.name}</span>
+                          <span
+                            aria-hidden
+                            className="hidden size-4 shrink-0 items-center justify-center text-xs font-semibold group-data-[collapsible=icon]:flex"
+                          >
+                            {a.name.charAt(0).toUpperCase()}
+                          </span>
+                          <span className="truncate group-data-[collapsible=icon]:hidden">
+                            {a.name}
+                          </span>
                           <Money
                             value={a.workingBalance}
                             currency={budget.currency}

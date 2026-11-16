@@ -4,9 +4,9 @@ import {
   CheckIcon,
   ChevronsUpDownIcon,
   PencilIcon,
+  PiggyBankIcon,
   PlusIcon,
   Trash2Icon,
-  WalletIcon,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -37,7 +37,7 @@ export function BudgetSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton size="lg" tooltip={current.name}>
-            <WalletIcon />
+            <PiggyBankIcon />
             <span className="truncate font-semibold">{current.name}</span>
             <ChevronsUpDownIcon className="ml-auto" />
           </SidebarMenuButton>

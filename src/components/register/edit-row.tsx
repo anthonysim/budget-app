@@ -507,7 +507,7 @@ export function EditRow({
                 <span
                   aria-live="polite"
                   className={
-                    remaining === 0 ? 'text-green-700' : 'text-destructive'
+                    remaining === 0 ? 'text-positive' : 'text-destructive'
                   }
                 >
                   {remaining === null ? (
