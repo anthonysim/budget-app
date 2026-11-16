@@ -9,6 +9,8 @@ import { AppSidebar } from '#/components/layout/app-sidebar'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import { SearchDialog } from '#/components/layout/search-dialog'
+import { InvitesBanner } from '#/components/sharing/invites-banner'
+import type { MyInvite } from '#/lib/sharing'
 import { ThemeToggle } from '#/components/theme-toggle'
 
 export function AppShell({
@@ -16,12 +18,14 @@ export function AppShell({
   budget,
   budgets,
   accounts,
+  invites,
   children,
 }: {
   email: string
   budget: BudgetSummary & { dateFormat: string }
   budgets: Array<BudgetSummary>
   accounts: Array<AccountWithBalances>
+  invites: Array<MyInvite>
   children: ReactNode
 }) {
   return (
@@ -45,6 +49,11 @@ export function AppShell({
             <ThemeToggle />
           </div>
         </header>
+        {invites.length > 0 ? (
+          <div className="px-6 pt-4">
+            <InvitesBanner invites={invites} />
+          </div>
+        ) : null}
         <div className="flex-1">{children}</div>
       </SidebarInset>
     </SidebarProvider>
