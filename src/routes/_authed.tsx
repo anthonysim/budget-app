@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
-import { AppShell } from '#/components/layout/app-shell'
+import { listBudgets } from '#/server/budgets'
 
 /** Pathless layout: everything under src/routes/_authed/ requires a signed-in user. */
 export const Route = createFileRoute('/_authed')({
@@ -9,14 +9,7 @@ export const Route = createFileRoute('/_authed')({
     }
     return { user: context.user }
   },
-  component: AuthedLayout,
+  // Runs in parallel with child loaders; feeds the budget switcher and /budgets/new.
+  loader: () => listBudgets(),
+  component: Outlet,
 })
-
-function AuthedLayout() {
-  const { user } = Route.useRouteContext()
-  return (
-    <AppShell email={user.email}>
-      <Outlet />
-    </AppShell>
-  )
-}

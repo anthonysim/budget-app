@@ -15,6 +15,20 @@
       "when": 1794793297883,
       "tag": "0001_profiles_trigger_and_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794795142188,
+      "tag": "0002_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794795146872,
+      "tag": "0003_budgets_rls",
+      "breakpoints": true
     }
   ]
 }

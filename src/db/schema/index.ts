@@ -1,2 +1,3 @@
 // Tables are added per domain: profiles (PR 3), budgets (PR 5), ...
 export * from './profiles'
+export * from './budgets'
