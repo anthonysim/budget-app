@@ -24,7 +24,7 @@ export function TargetProgress({
         <div
           className={cn(
             'h-full rounded-full',
-            target.status === 'underfunded' ? 'bg-amber-500' : 'bg-green-600',
+            target.status === 'underfunded' ? 'bg-warning' : 'bg-positive',
           )}
           style={{ width: `${pct}%` }}
         />
@@ -33,7 +33,7 @@ export function TargetProgress({
         data-testid="target-status"
         className={cn(
           target.status === 'underfunded'
-            ? 'text-amber-700 dark:text-amber-300'
+            ? 'text-warning-foreground'
             : 'text-muted-foreground',
         )}
       >

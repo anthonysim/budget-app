@@ -173,7 +173,7 @@ export function buildColumns({
               className={cn(
                 'size-5 rounded-full border text-xs font-semibold',
                 r.cleared === 'cleared'
-                  ? 'border-green-600 bg-green-600 text-white'
+                  ? 'border-positive bg-positive text-primary-foreground'
                   : 'text-muted-foreground',
               )}
             >

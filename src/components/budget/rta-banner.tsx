@@ -19,9 +19,9 @@ export function RtaBanner({
       className={cn(
         'flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3',
         state === 'positive' &&
-          'border-green-600/30 bg-green-50 text-green-900 dark:bg-green-950/40 dark:text-green-200',
+          'border-positive/30 bg-positive-soft text-positive-foreground',
         state === 'negative' &&
-          'border-red-600/30 bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-200',
+          'border-negative/30 bg-negative-soft text-negative-foreground',
         state === 'zero' && 'bg-muted',
       )}
     >
@@ -42,7 +42,7 @@ export function RtaBanner({
         </div>
       </div>
       {overspentCount > 0 ? (
-        <div className="text-sm font-medium text-red-700 dark:text-red-300">
+        <div className="text-sm font-medium text-negative-foreground">
           {overspentCount} categor{overspentCount === 1 ? 'y is' : 'ies are'}{' '}
           overspent
         </div>
