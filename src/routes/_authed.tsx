@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { AppShell } from '#/components/layout/app-shell'
 
 /** Pathless layout: everything under src/routes/_authed/ requires a signed-in user. */
 export const Route = createFileRoute('/_authed')({
@@ -8,5 +9,14 @@ export const Route = createFileRoute('/_authed')({
     }
     return { user: context.user }
   },
-  component: Outlet,
+  component: AuthedLayout,
 })
+
+function AuthedLayout() {
+  const { user } = Route.useRouteContext()
+  return (
+    <AppShell email={user.email}>
+      <Outlet />
+    </AppShell>
+  )
+}

@@ -83,12 +83,21 @@ Hosted Supabase: set `DATABASE_URL` to the Supavisor **transaction pooler** URL 
 
 Before opening a PR, run: `pnpm build && pnpm typecheck && pnpm lint && pnpm check && pnpm test` (same as CI).
 
+## Adding shadcn/ui components
+
+```bash
+pnpm dlx shadcn@latest add <name>
+```
+
+After adding, check that new files import `cn` from `#/lib/utils`. shadcn has wrongly generated `import { cn } from 'cn'` (an unrelated npm package) here before; if you see that, rewrite the import and `pnpm remove cn`.
+
 ## Project layout
 
 ```
 src/
   routes/        file-based routes (TanStack Router)
   components/ui/ shadcn/ui components (add more: pnpm dlx shadcn@latest add <name>)
+  components/layout/ app shell: sidebar, top bar, user menu
   db/            Drizzle client + schema
   server/        server functions (from PR 3)
   lib/           helpers (money.ts, env.server.ts, supabase/ clients)
