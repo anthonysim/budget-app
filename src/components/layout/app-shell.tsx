@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useRouterState } from '@tanstack/react-router'
 import {
   SidebarInset,
   SidebarProvider,
@@ -28,6 +29,7 @@ export function AppShell({
   invites: Array<MyInvite>
   children: ReactNode
 }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   return (
     <SidebarProvider>
       <AppSidebar
@@ -54,7 +56,13 @@ export function AppShell({
             <InvitesBanner invites={invites} />
           </div>
         ) : null}
-        <div className="flex-1">{children}</div>
+        {/* keyed by path only, so search-param changes don't replay the fade */}
+        <div
+          key={pathname}
+          className="animate-in fade-in-0 slide-in-from-bottom-1 flex-1 duration-200 ease-out motion-reduce:animate-none"
+        >
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
