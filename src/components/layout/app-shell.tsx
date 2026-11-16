@@ -4,7 +4,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '#/components/ui/sidebar'
-import { Separator } from '#/components/ui/separator'
 import { AppSidebar } from '#/components/layout/app-sidebar'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
 import type { AccountWithBalances } from '#/server/accounts-query'
@@ -38,8 +37,8 @@ export function AppShell({
       />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger aria-label="Toggle sidebar" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          {/* Desktop toggle lives in the sidebar header; the sidebar is a sheet on mobile, so keep one here. */}
+          <SidebarTrigger aria-label="Open sidebar" className="md:hidden" />
           <div className="ml-auto flex items-center gap-2">
             <SearchDialog
               budgetId={budget.id}
