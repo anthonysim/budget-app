@@ -39,6 +39,28 @@ export const moveMoneySchema = z
     message: 'Choose two different categories',
   })
 
+export interface TargetView {
+  type: 'needed_for_spending' | 'have_balance' | 'monthly_funding'
+  amount: number
+  repeat: 'weekly' | 'monthly' | 'yearly' | 'once' | null
+  dueDate: string | null
+  behavior: 'set_aside' | 'refill' | null
+  neededThisMonth: number
+  underfunded: number
+  /** 0..1 */
+  progress: number
+  status: 'funded' | 'underfunded' | 'none'
+}
+
+/** Figures from earlier months, used by the quick-budget actions. */
+export interface CategoryHistory {
+  lastAssigned: number
+  /** Money spent last month as a positive number (refunds count as 0). */
+  lastSpent: number
+  avgAssigned: number
+  avgSpent: number
+}
+
 export interface BudgetCategoryRow {
   id: string
   name: string
@@ -47,6 +69,8 @@ export interface BudgetCategoryRow {
   activity: number
   available: number
   overspent: 'cash' | 'credit' | null
+  target: TargetView | null
+  history: CategoryHistory
 }
 
 export interface BudgetGroupRow {

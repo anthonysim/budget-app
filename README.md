@@ -90,6 +90,8 @@ Pure functions in `src/domain/budget-math.ts` (unit tested in `budget-math.test.
 - **Available** = carried-in + assigned + activity. Positive Available rolls to next month; negative resets to 0.
 - **Overspending** is "credit" up to what was spent on credit accounts that month, the rest is "cash". Only cash overspending reduces Ready to Assign, starting the next month. Credit overspending becomes card debt (credit card payment categories, a later PR).
 - **Ready to Assign** (month) = income through that month - assigned through that month - cash overspending of earlier months.
+- **Targets** (`src/domain/targets.ts`): needed for spending (weekly, monthly, yearly or once; _set aside_ each cycle or _refill up to_), have a balance (optionally by a date), or fund every month (also used for monthly debt payments). The monthly need spreads a shortfall over the months left, rounded up. _Underfunded_ = needed this month minus assigned.
+- **Auto-assign** quick actions: Underfunded, Assigned/Spent last month, Average assigned/spent (3 months), Reset. Each is one undoable step.
 - Assigned cells accept expressions relative to the current value: `+50`, `-20`, `*2`, `/2`, `100+25`.
 
 ## Scheduled transactions and the cron job

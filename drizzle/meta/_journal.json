@@ -127,6 +127,20 @@
       "when": 1794800701210,
       "tag": "0017_scheduled_fks_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794801303683,
+      "tag": "0018_category_targets",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794801305135,
+      "tag": "0019_category_targets_rls",
+      "breakpoints": true
     }
   ]
 }
