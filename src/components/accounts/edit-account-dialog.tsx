@@ -14,6 +14,7 @@ import {
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { accountNameSchema } from '#/lib/accounts'
+import { parseMoneyInput, parsePercentToBps } from '#/lib/money'
 import { updateAccount } from '#/server/accounts'
 
 export function EditAccountDialog({
@@ -21,12 +22,19 @@ export function EditAccountDialog({
   accountId,
   name,
   note,
+  debt,
+  aprBps,
+  minPayment,
   children,
 }: {
   budgetId: string
   accountId: string
   name: string
   note: string | null
+  /** Debt accounts also edit their interest rate and minimum payment. */
+  debt: boolean
+  aprBps: number | null
+  minPayment: number | null
   children: ReactNode
 }) {
   const router = useRouter()
@@ -47,6 +55,22 @@ export function EditAccountDialog({
       setError('Note must be 500 characters or fewer')
       return
     }
+    let apr: number | null | undefined
+    let minPay: number | null | undefined
+    if (debt) {
+      const aprText = String(form.get('apr') ?? '').trim()
+      apr = aprText === '' ? null : parsePercentToBps(aprText)
+      if (aprText !== '' && apr === null) {
+        setError('Enter an interest rate like 19.99')
+        return
+      }
+      const payText = String(form.get('minPayment') ?? '').trim()
+      minPay = payText === '' ? null : parseMoneyInput(payText)
+      if (payText !== '' && (minPay === null || minPay < 0)) {
+        setError('Enter a valid minimum payment')
+        return
+      }
+    }
     setError(null)
     startTransition(async () => {
       try {
@@ -56,6 +80,8 @@ export function EditAccountDialog({
             accountId,
             name: parsedName.data,
             note: noteText === '' ? null : noteText,
+            aprBps: apr,
+            minPayment: minPay,
           },
         })
         await router.invalidate()
@@ -99,6 +125,34 @@ export function EditAccountDialog({
               maxLength={500}
             />
           </div>
+          {debt ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-account-apr">Interest rate (APR %)</Label>
+                <Input
+                  id="edit-account-apr"
+                  name="apr"
+                  inputMode="decimal"
+                  placeholder="19.99"
+                  autoComplete="off"
+                  defaultValue={aprBps === null ? '' : String(aprBps / 100)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-account-min">Minimum payment</Label>
+                <Input
+                  id="edit-account-min"
+                  name="minPayment"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  autoComplete="off"
+                  defaultValue={
+                    minPayment === null ? '' : String(minPayment / 1000)
+                  }
+                />
+              </div>
+            </div>
+          ) : null}
           {error ? (
             <p role="alert" className="text-destructive text-sm">
               {error}

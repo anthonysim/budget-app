@@ -9,6 +9,7 @@ import {
   createTransactionSchema,
   deleteTransactionsSchema,
   listTransactionsSchema,
+  setFlagSchema,
   updateTransactionSchema,
 } from '#/lib/transactions'
 import { requireBudgetRole } from '#/server/budget-access'
@@ -262,4 +263,19 @@ export const bulkUpdateTransactions = createServerFn({ method: 'POST' })
           )
       }
     })
+  })
+
+export const setTransactionFlag = createServerFn({ method: 'POST' })
+  .validator(setFlagSchema)
+  .handler(async ({ data }) => {
+    await requireBudgetRole(data.budgetId, 'editor')
+    await db()
+      .update(transactions)
+      .set({ flag: data.flag })
+      .where(
+        and(
+          eq(transactions.budgetId, data.budgetId),
+          inArray(transactions.id, data.transactionIds),
+        ),
+      )
   })

@@ -8,7 +8,7 @@ import {
   subtransactions,
   transactions,
 } from '#/db/schema'
-import type { ClearedStatus } from '#/lib/transactions'
+import type { ClearedStatus, Flag } from '#/lib/transactions'
 
 // Server-only query helpers (no createServerFn; see accounts-query.ts for why).
 
@@ -21,6 +21,7 @@ export interface TransactionRow {
   memo: string | null
   cleared: ClearedStatus
   approved: boolean
+  flag: Flag | null
   payeeName: string | null
   categoryId: string | null
   categoryName: string | null
@@ -44,6 +45,7 @@ export async function queryTransactions(
       memo: transactions.memo,
       cleared: transactions.cleared,
       approved: transactions.approved,
+      flag: transactions.flag,
       payeeName: sql<
         string | null
       >`case when ${transactions.transferAccountId} is not null then 'Transfer: ' || ${transferAccount.name} else ${payees.name} end`,
