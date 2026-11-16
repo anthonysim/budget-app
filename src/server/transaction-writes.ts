@@ -200,6 +200,7 @@ export async function createTransfer(
 export async function insertTransaction(
   tx: DbTransaction,
   data: TransactionInput,
+  extras: { approved?: boolean; importId?: string | null } = {},
 ) {
   const account = await getAccount(tx, data.budgetId, data.accountId)
 
@@ -223,6 +224,8 @@ export async function insertTransaction(
       cleared: data.cleared,
       payeeId,
       categoryId,
+      approved: extras.approved ?? true,
+      importId: extras.importId ?? null,
     })
     .returning({ id: transactions.id })
   if (created && lines) {

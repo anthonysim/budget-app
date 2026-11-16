@@ -7,6 +7,8 @@ import { Money } from '#/components/accounts/money'
 import { NotFoundView } from '#/components/not-found-view'
 import { Button } from '#/components/ui/button'
 import { ACCOUNT_TYPE_INFO } from '#/lib/accounts'
+import { ImportDialog } from '#/components/import/import-dialog'
+import { approveTransactions } from '#/server/import'
 import { ReconcileDialog } from '#/components/accounts/reconcile-dialog'
 import { Register } from '#/components/register/register'
 import { closeAccount, reopenAccount } from '#/server/accounts'
@@ -33,6 +35,9 @@ function AccountPage() {
   const account = accounts.find((a) => a.id === accountId)
   if (!account) return <NotFoundView />
   const canEdit = budget.role !== 'viewer'
+  const unapprovedCount = register.transactions.filter(
+    (t) => !t.approved,
+  ).length
   const wasClosed = account.closed
 
   function toggleClosed() {
@@ -91,6 +96,14 @@ function AccountPage() {
               </Button>
             </EditAccountDialog>
             {!account.closed ? (
+              <ImportDialog
+                budgetId={budget.id}
+                accountId={account.id}
+                savedMapping={account.importMapping}
+                currency={budget.currency}
+              />
+            ) : null}
+            {!account.closed ? (
               <ReconcileDialog
                 budgetId={budget.id}
                 accountId={account.id}
@@ -105,6 +118,37 @@ function AccountPage() {
           </div>
         ) : null}
       </div>
+
+      {unapprovedCount > 0 && canEdit ? (
+        <div
+          role="status"
+          className="bg-muted flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2 text-sm"
+        >
+          <span>
+            {unapprovedCount} transaction{unapprovedCount === 1 ? '' : 's'} to
+            approve
+          </span>
+          <Button
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                try {
+                  await approveTransactions({
+                    data: { budgetId: budget.id, accountId: account.id },
+                  })
+                  await router.invalidate()
+                  toast.success('Approved')
+                } catch {
+                  toast.error('Could not approve')
+                }
+              })
+            }
+          >
+            Approve all
+          </Button>
+        </div>
+      ) : null}
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {balances.map((b) => (

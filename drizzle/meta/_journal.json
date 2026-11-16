@@ -141,6 +141,20 @@
       "when": 1794801305135,
       "tag": "0019_category_targets_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794801816193,
+      "tag": "0020_import_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794801818345,
+      "tag": "0021_import_rules_fks_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table'
-import { LockIcon, PencilIcon } from 'lucide-react'
+import { CheckCheckIcon, LockIcon, PencilIcon } from 'lucide-react'
 import { Money } from '#/components/accounts/money'
 import { Button } from '#/components/ui/button'
 import { formatDateString } from '#/lib/date'
@@ -17,6 +17,7 @@ export interface RegisterMeta {
   /** Number of split lines per transaction id. */
   splitCounts: Map<string, number>
   onEdit: (id: string) => void
+  onApprove: (row: TransactionRow) => void
   onToggleCleared: (row: TransactionRow) => void
 }
 
@@ -192,18 +193,30 @@ export function buildColumns({
         const m = meta(table)
         if (!m.canEdit) return null
         return (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={
-              row.original.cleared === 'reconciled'
-                ? 'Edit reconciled transaction'
-                : 'Edit transaction'
-            }
-            onClick={() => m.onEdit(row.original.id)}
-          >
-            <PencilIcon />
-          </Button>
+          <div className="flex justify-end gap-0.5">
+            {!row.original.approved ? (
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Approve transaction"
+                onClick={() => m.onApprove(row.original)}
+              >
+                <CheckCheckIcon /> Approve
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={
+                row.original.cleared === 'reconciled'
+                  ? 'Edit reconciled transaction'
+                  : 'Edit transaction'
+              }
+              onClick={() => m.onEdit(row.original.id)}
+            >
+              <PencilIcon />
+            </Button>
+          </div>
         )
       },
     }),

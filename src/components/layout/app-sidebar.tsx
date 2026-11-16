@@ -4,6 +4,7 @@ import {
   CalendarClockIcon,
   LandmarkIcon,
   ListTreeIcon,
+  ReplaceIcon,
   WalletIcon,
 } from 'lucide-react'
 import {
@@ -31,6 +32,11 @@ const NAV = [
     to: '/budgets/$budgetId/categories',
     label: 'Categories',
     icon: ListTreeIcon,
+  },
+  {
+    to: '/budgets/$budgetId/payee-rules',
+    label: 'Payee rules',
+    icon: ReplaceIcon,
   },
   {
     to: '/budgets/$budgetId/scheduled',

@@ -17,6 +17,7 @@ import { EditRow } from '#/components/register/edit-row'
 import { NativeSelect } from '#/components/register/native-select'
 import { matchesSearch, runningBalances } from '#/lib/transactions'
 import { transferLabel } from '#/lib/transfers'
+import { approveTransactions } from '#/server/import'
 import {
   bulkUpdateTransactions,
   deleteTransactions,
@@ -43,7 +44,7 @@ interface RegisterData {
   inflowCategoryId: string | null
 }
 
-type ClearedFilter = 'all' | 'uncleared' | 'cleared'
+type ClearedFilter = 'all' | 'uncleared' | 'cleared' | 'unapproved'
 
 export function Register({
   budget,
@@ -106,9 +107,11 @@ export function Register({
         .filter(
           (t) =>
             (clearedFilter === 'all' ||
-              (clearedFilter === 'cleared'
-                ? t.cleared !== 'uncleared'
-                : t.cleared === 'uncleared')) &&
+              (clearedFilter === 'unapproved'
+                ? !t.approved
+                : clearedFilter === 'cleared'
+                  ? t.cleared !== 'uncleared'
+                  : t.cleared === 'uncleared')) &&
             matchesSearch(query, [
               t.payeeName,
               t.memo,
@@ -146,6 +149,14 @@ export function Register({
     balances,
     splitCounts,
     onEdit: requestEdit,
+    onApprove: (t) =>
+      mutate(
+        () =>
+          approveTransactions({
+            data: { budgetId: budget.id, transactionIds: [t.id] },
+          }),
+        'Approved',
+      ),
     onToggleCleared: (t) =>
       mutate(
         () =>
@@ -235,6 +246,7 @@ export function Register({
           <option value="all">All</option>
           <option value="uncleared">Uncleared</option>
           <option value="cleared">Cleared</option>
+          <option value="unapproved">Needs approval</option>
         </NativeSelect>
         {canEdit ? (
           <Button className="ml-auto" onClick={() => setEditingId('new')}>
@@ -250,6 +262,15 @@ export function Register({
           inflowCategoryId={data.inflowCategoryId}
           busy={busy}
           onClear={() => setRowSelection({})}
+          onApprove={() =>
+            mutate(
+              () =>
+                approveTransactions({
+                  data: { budgetId: budget.id, transactionIds: selectedIds },
+                }),
+              'Approved',
+            )
+          }
           onCategorize={(categoryId) =>
             mutate(
               () =>
@@ -333,8 +354,9 @@ export function Register({
                   <tr
                     tabIndex={0}
                     data-state={row.getIsSelected() ? 'selected' : undefined}
+                    data-approved={row.original.approved}
                     onKeyDown={(e) => moveFocus(e, row.original)}
-                    className="data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                    className="data-[approved=false]:border-l-primary data-[approved=false]:border-l-4 data-[approved=false]:font-semibold data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-2 py-1.5">

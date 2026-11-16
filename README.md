@@ -104,6 +104,16 @@ Scheduled transactions are entered as real (uncleared) transactions when they co
   env var is set. Generate a long random value, add it under Settings > Environment Variables (Production),
   and never commit it. Without it the endpoint returns 503.
 
+## Importing transactions
+
+Account page > **Import** accepts CSV, OFX and QFX. Files are parsed in the browser (`src/lib/import/`); only parsed rows are sent.
+
+- CSV: a column mapping step (date column and format, payee, memo, one signed amount column or separate outflow/inflow columns, optional sign flip). The mapping is remembered per account.
+- Duplicates are skipped using a per-account import id (the bank's id for OFX, otherwise amount + date + occurrence).
+- A bank row that matches a transaction you entered by hand (same amount, date within 10 days) is matched to it instead of duplicated.
+- New transactions arrive **cleared but unapproved**; approve them one by one, in bulk, or with **Approve all**.
+- **Payee rules** (sidebar): rename a bank payee (contains, starts with, exactly) and set a default category. First matching rule wins.
+
 ## Adding shadcn/ui components
 
 ```bash

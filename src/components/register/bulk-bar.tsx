@@ -14,6 +14,7 @@ export function BulkBar({
   onCategorize,
   onSetCleared,
   onDelete,
+  onApprove,
   onClear,
 }: {
   count: number
@@ -24,6 +25,7 @@ export function BulkBar({
   onCategorize: (categoryId: string | null) => void
   onSetCleared: (cleared: 'cleared' | 'uncleared') => void
   onDelete: () => void
+  onApprove: () => void
   onClear: () => void
 }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -68,6 +70,9 @@ export function BulkBar({
         onClick={() => onSetCleared('uncleared')}
       >
         Mark uncleared
+      </Button>
+      <Button size="sm" variant="outline" disabled={busy} onClick={onApprove}>
+        Approve
       </Button>
       <Button
         size="sm"

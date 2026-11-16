@@ -20,6 +20,7 @@ export interface TransactionRow {
   amount: number
   memo: string | null
   cleared: ClearedStatus
+  approved: boolean
   payeeName: string | null
   categoryId: string | null
   categoryName: string | null
@@ -42,6 +43,7 @@ export async function queryTransactions(
       amount: transactions.amount,
       memo: transactions.memo,
       cleared: transactions.cleared,
+      approved: transactions.approved,
       payeeName: sql<
         string | null
       >`case when ${transactions.transferAccountId} is not null then 'Transfer: ' || ${transferAccount.name} else ${payees.name} end`,
