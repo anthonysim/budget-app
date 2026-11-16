@@ -21,6 +21,7 @@ import { Route as AuthedBudgetsNewRouteImport } from './routes/_authed/budgets/n
 import { Route as AuthedBudgetsBudgetIdBudgetRouteImport } from './routes/_authed/budgets/$budgetId/budget'
 import { Route as AuthedBudgetsBudgetIdCategoriesRouteImport } from './routes/_authed/budgets/$budgetId/categories'
 import { Route as AuthedBudgetsBudgetIdReportsRouteImport } from './routes/_authed/budgets/$budgetId/reports'
+import { Route as AuthedBudgetsBudgetIdTransactionsRouteImport } from './routes/_authed/budgets/$budgetId/transactions'
 import { Route as AuthedBudgetsBudgetIdAccountsIndexRouteImport } from './routes/_authed/budgets/$budgetId/accounts/index'
 import { Route as AuthedBudgetsBudgetIdAccountsAccountIdRouteImport } from './routes/_authed/budgets/$budgetId/accounts/$accountId'
 
@@ -86,6 +87,12 @@ const AuthedBudgetsBudgetIdReportsRoute =
     path: '/reports',
     getParentRoute: () => AuthedBudgetsBudgetIdRoute,
   } as any)
+const AuthedBudgetsBudgetIdTransactionsRoute =
+  AuthedBudgetsBudgetIdTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AuthedBudgetsBudgetIdRoute,
+  } as any)
 const AuthedBudgetsBudgetIdAccountsIndexRoute =
   AuthedBudgetsBudgetIdAccountsIndexRouteImport.update({
     id: '/accounts/',
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
   '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/budgets/$budgetId/accounts/': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
 }
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
   '/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/budgets/$budgetId/accounts': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
 }
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/_authed/budgets/$budgetId/budget': typeof AuthedBudgetsBudgetIdBudgetRoute
   '/_authed/budgets/$budgetId/categories': typeof AuthedBudgetsBudgetIdCategoriesRoute
   '/_authed/budgets/$budgetId/reports': typeof AuthedBudgetsBudgetIdReportsRoute
+  '/_authed/budgets/$budgetId/transactions': typeof AuthedBudgetsBudgetIdTransactionsRoute
   '/_authed/budgets/$budgetId/accounts/$accountId': typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   '/_authed/budgets/$budgetId/accounts/': typeof AuthedBudgetsBudgetIdAccountsIndexRoute
 }
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/budgets/$budgetId/budget'
     | '/budgets/$budgetId/categories'
     | '/budgets/$budgetId/reports'
+    | '/budgets/$budgetId/transactions'
     | '/budgets/$budgetId/accounts/$accountId'
     | '/budgets/$budgetId/accounts/'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/budgets/$budgetId/budget'
     | '/budgets/$budgetId/categories'
     | '/budgets/$budgetId/reports'
+    | '/budgets/$budgetId/transactions'
     | '/budgets/$budgetId/accounts/$accountId'
     | '/budgets/$budgetId/accounts'
   id:
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authed/budgets/$budgetId/budget'
     | '/_authed/budgets/$budgetId/categories'
     | '/_authed/budgets/$budgetId/reports'
+    | '/_authed/budgets/$budgetId/transactions'
     | '/_authed/budgets/$budgetId/accounts/$accountId'
     | '/_authed/budgets/$budgetId/accounts/'
   fileRoutesById: FileRoutesById
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBudgetsBudgetIdReportsRouteImport
       parentRoute: typeof AuthedBudgetsBudgetIdRoute
     }
+    '/_authed/budgets/$budgetId/transactions': {
+      id: '/_authed/budgets/$budgetId/transactions'
+      path: '/transactions'
+      fullPath: '/budgets/$budgetId/transactions'
+      preLoaderRoute: typeof AuthedBudgetsBudgetIdTransactionsRouteImport
+      parentRoute: typeof AuthedBudgetsBudgetIdRoute
+    }
     '/_authed/budgets/$budgetId/accounts/': {
       id: '/_authed/budgets/$budgetId/accounts/'
       path: '/accounts'
@@ -311,6 +331,7 @@ interface AuthedBudgetsBudgetIdRouteChildren {
   AuthedBudgetsBudgetIdBudgetRoute: typeof AuthedBudgetsBudgetIdBudgetRoute
   AuthedBudgetsBudgetIdCategoriesRoute: typeof AuthedBudgetsBudgetIdCategoriesRoute
   AuthedBudgetsBudgetIdReportsRoute: typeof AuthedBudgetsBudgetIdReportsRoute
+  AuthedBudgetsBudgetIdTransactionsRoute: typeof AuthedBudgetsBudgetIdTransactionsRoute
   AuthedBudgetsBudgetIdAccountsAccountIdRoute: typeof AuthedBudgetsBudgetIdAccountsAccountIdRoute
   AuthedBudgetsBudgetIdAccountsIndexRoute: typeof AuthedBudgetsBudgetIdAccountsIndexRoute
 }
@@ -319,6 +340,8 @@ const AuthedBudgetsBudgetIdRouteChildren: AuthedBudgetsBudgetIdRouteChildren = {
   AuthedBudgetsBudgetIdBudgetRoute: AuthedBudgetsBudgetIdBudgetRoute,
   AuthedBudgetsBudgetIdCategoriesRoute: AuthedBudgetsBudgetIdCategoriesRoute,
   AuthedBudgetsBudgetIdReportsRoute: AuthedBudgetsBudgetIdReportsRoute,
+  AuthedBudgetsBudgetIdTransactionsRoute:
+    AuthedBudgetsBudgetIdTransactionsRoute,
   AuthedBudgetsBudgetIdAccountsAccountIdRoute:
     AuthedBudgetsBudgetIdAccountsAccountIdRoute,
   AuthedBudgetsBudgetIdAccountsIndexRoute:

@@ -57,6 +57,20 @@
       "when": 1794796297530,
       "tag": "0007_categories_rls_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794796747967,
+      "tag": "0008_transactions_payees",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794796749753,
+      "tag": "0009_transactions_payees_fks",
+      "breakpoints": true
     }
   ]
 }

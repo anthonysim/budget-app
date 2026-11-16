@@ -1,6 +1,6 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, categoryGroups } from '#/db/schema'
+import { categories, categoryGroups, transactions } from '#/db/schema'
 
 // Server-only query helpers (no createServerFn here; see accounts-query.ts for why).
 
@@ -9,6 +9,8 @@ export interface CategoryRow {
   name: string
   hidden: boolean
   note: string | null
+  /** Transactions using this category (drives the delete/reassign prompt). */
+  transactionCount: number
 }
 
 export interface CategoryGroupRow {
@@ -22,7 +24,7 @@ export interface CategoryGroupRow {
 export async function queryCategoryGroups(
   budgetId: string,
 ): Promise<Array<CategoryGroupRow>> {
-  const [groups, cats] = await Promise.all([
+  const [groups, cats, usage] = await Promise.all([
     db()
       .select({
         id: categoryGroups.id,
@@ -44,12 +46,21 @@ export async function queryCategoryGroups(
       .from(categories)
       .where(eq(categories.budgetId, budgetId))
       .orderBy(asc(categories.sort), asc(categories.createdAt)),
+    db()
+      .select({
+        categoryId: transactions.categoryId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(transactions)
+      .where(eq(transactions.budgetId, budgetId))
+      .groupBy(transactions.categoryId),
   ])
+  const counts = new Map(usage.map((u) => [u.categoryId, u.count]))
 
   const byGroup = new Map<string, Array<CategoryRow>>()
   for (const { groupId, ...rest } of cats) {
     const list = byGroup.get(groupId) ?? []
-    list.push(rest)
+    list.push({ ...rest, transactionCount: counts.get(rest.id) ?? 0 })
     byGroup.set(groupId, list)
   }
   return groups
@@ -58,4 +69,21 @@ export async function queryCategoryGroups(
       ...g,
       categories: byGroup.get(g.id) ?? [],
     }))
+}
+
+/** The Ready to Assign category id (income category) for a budget. */
+export async function queryInflowCategoryId(
+  budgetId: string,
+): Promise<string | null> {
+  const [row] = await db()
+    .select({ id: categories.id })
+    .from(categories)
+    .where(
+      and(
+        eq(categories.budgetId, budgetId),
+        eq(categories.systemKind, 'inflow'),
+      ),
+    )
+    .limit(1)
+  return row?.id ?? null
 }

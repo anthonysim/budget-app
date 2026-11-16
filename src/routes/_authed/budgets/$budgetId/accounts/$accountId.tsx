@@ -7,18 +7,25 @@ import { Money } from '#/components/accounts/money'
 import { NotFoundView } from '#/components/not-found-view'
 import { Button } from '#/components/ui/button'
 import { ACCOUNT_TYPE_INFO } from '#/lib/accounts'
+import { Register } from '#/components/register/register'
 import { closeAccount, reopenAccount } from '#/server/accounts'
+import { loadRegister } from '#/server/transactions'
 
 const layout = getRouteApi('/_authed/budgets/$budgetId')
 
 export const Route = createFileRoute(
   '/_authed/budgets/$budgetId/accounts/$accountId',
 )({
+  loader: ({ params }) =>
+    loadRegister({
+      data: { budgetId: params.budgetId, accountId: params.accountId },
+    }),
   component: AccountPage,
 })
 
 function AccountPage() {
   const { accountId } = Route.useParams()
+  const register = Route.useLoaderData()
   const { budget, accounts } = layout.useLoaderData()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -47,7 +54,7 @@ function AccountPage() {
   ]
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">
@@ -94,9 +101,12 @@ function AccountPage() {
         ))}
       </dl>
 
-      <p className="text-muted-foreground text-sm">
-        Transactions for this account arrive in the next update.
-      </p>
+      <Register
+        budget={budget}
+        accounts={accounts}
+        data={register}
+        accountId={account.id}
+      />
     </div>
   )
 }

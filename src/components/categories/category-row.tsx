@@ -17,7 +17,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { ConfirmDialog } from '#/components/categories/confirm-dialog'
+import { DeleteCategoryDialog } from '#/components/categories/delete-category-dialog'
 import { NameDialog } from '#/components/categories/name-dialog'
 import { DragHandle, SortableItem } from '#/components/categories/sortable'
 import { useRunner } from '#/components/categories/use-runner'
@@ -144,17 +144,20 @@ export function CategoryItem({
               await refresh('Category renamed')
             }}
           />
-          <ConfirmDialog
+          <DeleteCategoryDialog
             open={deleteOpen}
             onOpenChange={setDeleteOpen}
-            title={`Delete “${category.name}”?`}
-            description="This permanently deletes the category."
-            confirmLabel="Delete category"
-            onConfirm={() =>
+            category={category}
+            groups={groups}
+            onConfirm={(reassignToCategoryId) =>
               run(
                 () =>
                   deleteCategory({
-                    data: { budgetId, categoryId: category.id },
+                    data: {
+                      budgetId,
+                      categoryId: category.id,
+                      reassignToCategoryId,
+                    },
                   }),
                 'Category deleted',
               )

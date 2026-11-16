@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { dateSchema } from '#/lib/transactions'
 
 export const ACCOUNT_TYPES = [
   'checking',
@@ -61,6 +62,8 @@ export const createAccountSchema = z.object({
   type: z.enum(ACCOUNT_TYPES),
   /** Entered balance in milliunits (integer). */
   startingBalance: z.number().int().min(-1e12).max(1e12),
+  /** Client's local 'YYYY-MM-DD' for the starting balance transaction. */
+  startingDate: dateSchema.optional(),
 })
 
 export const updateAccountSchema = z.object({
