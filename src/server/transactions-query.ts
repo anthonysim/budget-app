@@ -1,7 +1,13 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '#/db'
-import { accounts, categories, payees, transactions } from '#/db/schema'
+import {
+  accounts,
+  categories,
+  payees,
+  subtransactions,
+  transactions,
+} from '#/db/schema'
 import type { ClearedStatus } from '#/lib/transactions'
 
 // Server-only query helpers (no createServerFn; see accounts-query.ts for why).
@@ -81,4 +87,39 @@ export function queryPayees(budgetId: string): Promise<Array<PayeeRow>> {
       ),
     )
     .orderBy(asc(payees.name))
+}
+
+export interface SplitRow {
+  id: string
+  transactionId: string
+  categoryId: string | null
+  categoryName: string | null
+  memo: string | null
+  amount: number
+}
+
+/** Split lines for the transactions of one account (or the whole budget). */
+export function querySplits(
+  budgetId: string,
+  accountId?: string,
+): Promise<Array<SplitRow>> {
+  return db()
+    .select({
+      id: subtransactions.id,
+      transactionId: subtransactions.transactionId,
+      categoryId: subtransactions.categoryId,
+      categoryName: categories.name,
+      memo: subtransactions.memo,
+      amount: subtransactions.amount,
+    })
+    .from(subtransactions)
+    .innerJoin(transactions, eq(transactions.id, subtransactions.transactionId))
+    .leftJoin(categories, eq(categories.id, subtransactions.categoryId))
+    .where(
+      and(
+        eq(subtransactions.budgetId, budgetId),
+        accountId ? eq(transactions.accountId, accountId) : undefined,
+      ),
+    )
+    .orderBy(asc(subtransactions.sort))
 }

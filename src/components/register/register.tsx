@@ -1,4 +1,4 @@
-import { useMemo, useState, useTransition } from 'react'
+import { Fragment, useMemo, useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   flexRender,
@@ -24,10 +24,17 @@ import {
 } from '#/server/transactions'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import type { CategoryGroupRow } from '#/server/categories-query'
-import type { PayeeRow, TransactionRow } from '#/server/transactions-query'
+import type {
+  PayeeRow,
+  SplitRow,
+  TransactionRow,
+} from '#/server/transactions-query'
+import { ConfirmDialog } from '#/components/categories/confirm-dialog'
+import { Money } from '#/components/accounts/money'
 
 interface RegisterData {
   transactions: Array<TransactionRow>
+  splits: Array<SplitRow>
   payees: Array<PayeeRow>
   categoryGroups: Array<CategoryGroupRow>
   inflowCategoryId: string | null
@@ -54,6 +61,8 @@ export function Register({
   const [clearedFilter, setClearedFilter] = useState<ClearedFilter>('all')
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [confirmEditId, setConfirmEditId] = useState<string | null>(null)
+  const [editingReconciled, setEditingReconciled] = useState(false)
   const [busy, startTransition] = useTransition()
 
   // Running balance is computed from the full list so filtering never changes it.
@@ -61,6 +70,30 @@ export function Register({
     () => runningBalances(data.transactions),
     [data.transactions],
   )
+
+  const splitsByTxn = useMemo(() => {
+    const map = new Map<string, Array<SplitRow>>()
+    for (const sp of data.splits) {
+      const list = map.get(sp.transactionId) ?? []
+      list.push(sp)
+      map.set(sp.transactionId, list)
+    }
+    return map
+  }, [data.splits])
+  const splitCounts = useMemo(
+    () => new Map([...splitsByTxn].map(([id, list]) => [id, list.length])),
+    [splitsByTxn],
+  )
+
+  function requestEdit(id: string) {
+    const t = data.transactions.find((x) => x.id === id)
+    if (t?.cleared === 'reconciled') {
+      setConfirmEditId(id)
+    } else {
+      setEditingReconciled(false)
+      setEditingId(id)
+    }
+  }
 
   // Newest first for display
   const rows = useMemo(
@@ -108,7 +141,8 @@ export function Register({
     canEdit,
     inflowCategoryId: data.inflowCategoryId,
     balances,
-    onEdit: setEditingId,
+    splitCounts,
+    onEdit: requestEdit,
     onToggleCleared: (t) =>
       mutate(
         () =>
@@ -157,9 +191,9 @@ export function Register({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       ;(el.previousElementSibling as HTMLElement | null)?.focus()
-    } else if (e.key === 'Enter' && canEdit && row.cleared !== 'reconciled') {
+    } else if (e.key === 'Enter' && canEdit) {
       e.preventDefault()
-      setEditingId(row.id)
+      requestEdit(row.id)
     } else if (e.key === ' ' && canEdit && row.cleared !== 'reconciled') {
       e.preventDefault()
       setRowSelection((s) => ({ ...s, [row.id]: !s[row.id] }))
@@ -175,6 +209,7 @@ export function Register({
     inflowCategoryId: data.inflowCategoryId,
     showAccountColumn: !singleAccount,
     showBalanceColumn: singleAccount,
+    currency: budget.currency,
     onDone: () => setEditingId(null),
   }
 
@@ -282,24 +317,56 @@ export function Register({
                   key={row.id}
                   {...editProps}
                   transaction={row.original}
+                  existingSplits={splitsByTxn.get(row.original.id)}
+                  confirmReconciled={editingReconciled}
                 />
               ) : (
-                <tr
-                  key={row.id}
-                  tabIndex={0}
-                  data-state={row.getIsSelected() ? 'selected' : undefined}
-                  onKeyDown={(e) => moveFocus(e, row.original)}
-                  className="data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-2 py-1.5">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
+                <Fragment key={row.id}>
+                  <tr
+                    tabIndex={0}
+                    data-state={row.getIsSelected() ? 'selected' : undefined}
+                    onKeyDown={(e) => moveFocus(e, row.original)}
+                    className="data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-2 py-1.5">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {(splitsByTxn.get(row.original.id) ?? []).map((sp) => (
+                    <tr
+                      key={sp.id}
+                      data-testid="split-display-line"
+                      className="bg-muted/20 text-muted-foreground"
+                    >
+                      <td />
+                      {!singleAccount ? <td /> : null}
+                      <td />
+                      <td className="px-2 py-1 pl-6 text-xs">Split</td>
+                      <td className="px-2 py-1">
+                        {sp.categoryName ?? 'Uncategorized'}
+                      </td>
+                      <td className="px-2 py-1">{sp.memo ?? ''}</td>
+                      <td className="px-2 py-1 text-right">
+                        {sp.amount < 0 ? (
+                          <Money value={sp.amount} currency={budget.currency} />
+                        ) : null}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {sp.amount > 0 ? (
+                          <Money value={sp.amount} currency={budget.currency} />
+                        ) : null}
+                      </td>
+                      <td />
+                      {singleAccount ? <td /> : null}
+                      <td />
+                    </tr>
                   ))}
-                </tr>
+                </Fragment>
               ),
             )}
             {rows.length === 0 && editingId !== 'new' ? (
@@ -317,6 +384,20 @@ export function Register({
           </tbody>
         </table>
       </div>
+      <ConfirmDialog
+        open={confirmEditId !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmEditId(null)
+        }}
+        title="Edit a reconciled transaction?"
+        description="This transaction is reconciled. Changing it can make your balance differ from your bank. Edit anyway?"
+        confirmLabel="Edit anyway"
+        onConfirm={() => {
+          setEditingReconciled(true)
+          setEditingId(confirmEditId)
+          setConfirmEditId(null)
+        }}
+      />
     </section>
   )
 }

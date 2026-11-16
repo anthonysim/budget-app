@@ -1,11 +1,6 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import {
-  accounts,
-  categories,
-  monthAssignments,
-  transactions,
-} from '#/db/schema'
+import { categories, monthAssignments } from '#/db/schema'
 import { computeBudgetMonth } from '#/domain/budget-math'
 import type {
   ActivityInput,
@@ -21,57 +16,53 @@ import { queryCategoryGroups } from '#/server/categories-query'
 
 // Server-only query helpers (no createServerFn; see accounts-query.ts for why).
 
-const monthOf = sql<string>`to_char(${transactions.date}, 'YYYY-MM-01')`
-
-const CREDIT_TYPES = sql`('credit_card','line_of_credit')`
-
 /** Gathers everything the pure budget math needs for one budget. */
 export async function queryBudgetMathInput(
   budgetId: string,
 ): Promise<BudgetMathInput> {
-  // On-budget transactions grouped by category, month and account.
-  const perAccount = (kind: 'spending' | 'inflow') =>
-    db()
-      .select({
-        categoryId: transactions.categoryId,
-        month: monthOf.as('month'),
-        accountId: transactions.accountId,
-        isCredit: sql<boolean>`${accounts.type} in ${CREDIT_TYPES}`.as(
-          'is_credit',
-        ),
-        amount: sql<number>`sum(${transactions.amount})::float8`.as('amount'),
-        spend:
-          sql<number>`coalesce(sum(case when ${transactions.amount} < 0 then ${transactions.amount} else 0 end), 0)::float8`.as(
-            'spend',
-          ),
-        refund:
-          sql<number>`coalesce(sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end), 0)::float8`.as(
-            'refund',
-          ),
-      })
-      .from(transactions)
-      .innerJoin(
-        accounts,
-        and(
-          eq(accounts.id, transactions.accountId),
-          eq(accounts.onBudget, true),
-        ),
+  // On-budget "lines" (a split parent is replaced by its lines) grouped by category, month and
+  // account. Raw SQL because of the union between plain transactions and split lines.
+  interface LineRow {
+    category_id: string
+    month: string
+    account_id: string
+    is_credit: boolean
+    amount: number
+    spend: number
+    refund: number
+  }
+  const perAccount = async (kind: 'spending' | 'inflow') => {
+    const kindFilter =
+      kind === 'inflow'
+        ? sql`c.system_kind = 'inflow'`
+        : sql`c.system_kind is distinct from 'inflow'`
+    const rows = await db().execute(sql`
+      with lines as (
+        select t.account_id, t.date, t.category_id, t.amount
+        from transactions t
+        where t.budget_id = ${budgetId}
+          and not exists (select 1 from subtransactions s where s.transaction_id = t.id)
+        union all
+        select t.account_id, t.date, s.category_id, s.amount
+        from subtransactions s
+        join transactions t on t.id = s.transaction_id and t.budget_id = s.budget_id
+        where s.budget_id = ${budgetId}
       )
-      .innerJoin(categories, eq(categories.id, transactions.categoryId))
-      .where(
-        and(
-          eq(transactions.budgetId, budgetId),
-          kind === 'inflow'
-            ? eq(categories.systemKind, 'inflow')
-            : sql`${categories.systemKind} is distinct from 'inflow'`,
-        ),
-      )
-      .groupBy(
-        transactions.categoryId,
-        monthOf,
-        transactions.accountId,
-        accounts.type,
-      )
+      select l.category_id,
+             to_char(l.date, 'YYYY-MM-01') as month,
+             l.account_id,
+             (a.type in ('credit_card', 'line_of_credit')) as is_credit,
+             sum(l.amount)::float8 as amount,
+             coalesce(sum(case when l.amount < 0 then l.amount else 0 end), 0)::float8 as spend,
+             coalesce(sum(case when l.amount > 0 then l.amount else 0 end), 0)::float8 as refund
+      from lines l
+      join accounts a on a.id = l.account_id and a.on_budget
+      join categories c on c.id = l.category_id
+      where ${kindFilter}
+      group by l.category_id, 2, l.account_id, a.type
+    `)
+    return [...rows] as unknown as Array<LineRow>
+  }
 
   const [cats, assignments, spendingRows, incomeRows] = await Promise.all([
     db()
@@ -103,7 +94,7 @@ export async function queryBudgetMathInput(
   // fold the per-account rows into one ActivityInput per category-month
   const byKey = new Map<string, ActivityInput>()
   for (const r of spendingRows) {
-    const categoryId = r.categoryId as string
+    const categoryId = r.category_id
     const k = `${categoryId}|${r.month}`
     let entry = byKey.get(k)
     if (!entry) {
@@ -117,10 +108,10 @@ export async function queryBudgetMathInput(
       byKey.set(k, entry)
     }
     entry.amount += r.amount
-    if (r.isCredit) {
+    if (r.is_credit) {
       entry.creditAmount += r.spend
       ;(entry.credit as Array<CreditAccountActivity>).push({
-        accountId: r.accountId,
+        accountId: r.account_id,
         spend: r.spend,
         refund: r.refund,
       })

@@ -2,8 +2,10 @@ import { createServerFn } from '@tanstack/react-start'
 import { and, eq, inArray, ne, sql } from 'drizzle-orm'
 import { db } from '#/db'
 import type { z } from 'zod'
-import { accounts, payees, transactions } from '#/db/schema'
+import { accounts, payees, subtransactions, transactions } from '#/db/schema'
 import type { AccountType } from '#/lib/accounts'
+import { validateSplit } from '#/lib/splits'
+import type { SplitLine } from '#/lib/splits'
 import { resolveTransferCategories } from '#/lib/transfers'
 import type { TransferSide } from '#/lib/transfers'
 import type { ClearedStatus } from '#/lib/transactions'
@@ -22,21 +24,28 @@ import {
   queryInflowCategoryId,
 } from '#/server/categories-query'
 import { findOrCreatePayee } from '#/server/payees'
-import { queryPayees, queryTransactions } from '#/server/transactions-query'
+import {
+  queryPayees,
+  querySplits,
+  queryTransactions,
+} from '#/server/transactions-query'
 
 /** Everything the register needs in one round trip (one membership check). */
 export const loadRegister = createServerFn({ method: 'GET' })
   .validator(listTransactionsSchema)
   .handler(async ({ data }) => {
     await requireBudgetRole(data.budgetId, 'viewer')
-    const [rows, payeeRows, groups, inflowCategoryId] = await Promise.all([
-      queryTransactions(data.budgetId, data.accountId),
-      queryPayees(data.budgetId),
-      queryCategoryGroups(data.budgetId),
-      queryInflowCategoryId(data.budgetId),
-    ])
+    const [rows, splitRows, payeeRows, groups, inflowCategoryId] =
+      await Promise.all([
+        queryTransactions(data.budgetId, data.accountId),
+        querySplits(data.budgetId, data.accountId),
+        queryPayees(data.budgetId),
+        queryCategoryGroups(data.budgetId),
+        queryInflowCategoryId(data.budgetId),
+      ])
     return {
       transactions: rows,
+      splits: splitRows,
       payees: payeeRows,
       categoryGroups: groups,
       inflowCategoryId,
@@ -115,6 +124,52 @@ async function getExisting(
 
 type TransactionInput = z.infer<typeof createTransactionSchema>
 
+/** Validated split lines for a non-transfer transaction, or null if it is not split. */
+function checkedSplits(
+  data: {
+    splits?: Array<SplitLine>
+    amount: number
+    transferAccountId: string | null
+  },
+  account: AccountInfo,
+): Array<SplitLine> | null {
+  if (!data.splits || data.splits.length === 0) return null
+  if (data.transferAccountId) throw new Error('Transfers cannot be split')
+  if (!account.onBudget) {
+    throw new Error('Tracking accounts cannot have split transactions')
+  }
+  const error = validateSplit(data.amount, data.splits)
+  if (error) throw new Error(error)
+  return data.splits
+}
+
+async function replaceSplits(
+  tx: DbTransaction,
+  budgetId: string,
+  transactionId: string,
+  lines: Array<SplitLine> | null,
+) {
+  await tx
+    .delete(subtransactions)
+    .where(
+      and(
+        eq(subtransactions.budgetId, budgetId),
+        eq(subtransactions.transactionId, transactionId),
+      ),
+    )
+  if (!lines) return
+  await tx.insert(subtransactions).values(
+    lines.map((l, i) => ({
+      budgetId,
+      transactionId,
+      categoryId: l.categoryId,
+      memo: l.memo || null,
+      amount: l.amount,
+      sort: i,
+    })),
+  )
+}
+
 export const createTransaction = createServerFn({ method: 'POST' })
   .validator(createTransactionSchema)
   .handler(async ({ data }) => {
@@ -127,19 +182,26 @@ export const createTransaction = createServerFn({ method: 'POST' })
         return
       }
 
-      // tracking accounts have no categories
-      const categoryId = account.onBudget ? data.categoryId : null
+      const lines = checkedSplits(data, account)
+      // tracking accounts have no categories; split parents carry no category
+      const categoryId = account.onBudget && !lines ? data.categoryId : null
       const payeeId = await findOrCreatePayee(tx, data.budgetId, data.payeeName)
-      await tx.insert(transactions).values({
-        budgetId: data.budgetId,
-        accountId: data.accountId,
-        date: data.date,
-        amount: data.amount,
-        memo: data.memo || null,
-        cleared: data.cleared,
-        payeeId,
-        categoryId,
-      })
+      const [created] = await tx
+        .insert(transactions)
+        .values({
+          budgetId: data.budgetId,
+          accountId: data.accountId,
+          date: data.date,
+          amount: data.amount,
+          memo: data.memo || null,
+          cleared: data.cleared,
+          payeeId,
+          categoryId,
+        })
+        .returning({ id: transactions.id })
+      if (created && lines) {
+        await replaceSplits(tx, data.budgetId, created.id, lines)
+      }
       await rememberPayeeCategory(tx, data.budgetId, payeeId, categoryId)
     })
   })
@@ -215,15 +277,18 @@ export const updateTransaction = createServerFn({ method: 'POST' })
     await db().transaction(async (tx) => {
       const account = await getAccount(tx, data.budgetId, data.accountId)
       const existing = await getExisting(tx, data.budgetId, data.transactionId)
-      if (existing.cleared === 'reconciled') {
+      if (existing.cleared === 'reconciled' && !data.confirmReconciled) {
         throw new Error('Reconciled transactions are locked')
       }
       const mirror = existing.transferTransactionId
         ? await getExisting(tx, data.budgetId, existing.transferTransactionId)
         : null
-      if (mirror?.cleared === 'reconciled') {
+      if (mirror?.cleared === 'reconciled' && !data.confirmReconciled) {
         throw new Error('The other side of this transfer is reconciled')
       }
+      // editing keeps a reconciled transaction reconciled
+      const clearedStatus: ClearedStatus =
+        existing.cleared === 'reconciled' ? 'reconciled' : data.cleared
 
       if (data.transferAccountId) {
         if (data.transferAccountId === account.id) {
@@ -250,12 +315,13 @@ export const updateTransaction = createServerFn({ method: 'POST' })
             date: data.date,
             amount: data.amount,
             memo: data.memo || null,
-            cleared: data.cleared,
+            cleared: clearedStatus,
             payeeId: null,
             categoryId: cats.a,
             transferAccountId: other.id,
           })
           .where(eq(transactions.id, existing.id))
+        await replaceSplits(tx, data.budgetId, existing.id, null)
         if (mirror) {
           await tx
             .update(transactions)
@@ -296,7 +362,8 @@ export const updateTransaction = createServerFn({ method: 'POST' })
       if (mirror) {
         await tx.delete(transactions).where(eq(transactions.id, mirror.id))
       }
-      const categoryId = account.onBudget ? data.categoryId : null
+      const lines = checkedSplits(data, account)
+      const categoryId = account.onBudget && !lines ? data.categoryId : null
       const payeeId = await findOrCreatePayee(tx, data.budgetId, data.payeeName)
       await tx
         .update(transactions)
@@ -305,13 +372,14 @@ export const updateTransaction = createServerFn({ method: 'POST' })
           date: data.date,
           amount: data.amount,
           memo: data.memo || null,
-          cleared: data.cleared,
+          cleared: clearedStatus,
           payeeId,
           categoryId,
           transferAccountId: null,
           transferTransactionId: null,
         })
         .where(eq(transactions.id, existing.id))
+      await replaceSplits(tx, data.budgetId, existing.id, lines)
       await rememberPayeeCategory(tx, data.budgetId, payeeId, categoryId)
     })
   })
@@ -394,6 +462,7 @@ export const bulkUpdateTransactions = createServerFn({ method: 'POST' })
             and(
               scope,
               sql`${transactions.transferTransactionId} is null`,
+              sql`not exists (select 1 from ${subtransactions} where ${subtransactions.transactionId} = ${transactions.id})`,
               sql`exists (select 1 from ${accounts} where ${accounts.id} = ${transactions.accountId} and ${accounts.onBudget})`,
             ),
           )

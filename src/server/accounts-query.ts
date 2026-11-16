@@ -19,6 +19,8 @@ export function queryAccounts(budgetId: string) {
       closed: accounts.closed,
       sort: accounts.sort,
       note: accounts.note,
+      lastReconciledAt: accounts.lastReconciledAt,
+      lastReconciledBalance: accounts.lastReconciledBalance,
       clearedBalance: sum(
         sql`${transactions.cleared} in ('cleared','reconciled')`,
       ),

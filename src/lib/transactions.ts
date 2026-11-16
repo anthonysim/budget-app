@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { splitLinesSchema } from '#/lib/splits'
 
 export const CLEARED_STATUSES = ['uncleared', 'cleared', 'reconciled'] as const
 export type ClearedStatus = (typeof CLEARED_STATUSES)[number]
@@ -24,6 +25,8 @@ const base = {
   /** Set to make this a transfer to/from another account (payeeName is then ignored). */
   transferAccountId: z.uuid().nullable(),
   memo: z.string().trim().max(500).nullable(),
+  /** Split lines (2+). When set the parent has no category of its own. */
+  splits: splitLinesSchema.optional(),
   /** Signed milliunits: inflow positive, outflow negative. */
   amount: z.number().int().min(-1e12).max(1e12),
   cleared: z.enum(['uncleared', 'cleared']),
@@ -34,6 +37,8 @@ export const createTransactionSchema = z.object(base)
 export const updateTransactionSchema = z.object({
   ...base,
   transactionId: z.uuid(),
+  /** Required to edit a reconciled transaction (the UI asks the user to confirm). */
+  confirmReconciled: z.boolean().optional(),
 })
 
 export const listTransactionsSchema = z.object({

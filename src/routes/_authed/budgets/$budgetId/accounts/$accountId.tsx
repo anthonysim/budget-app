@@ -7,6 +7,7 @@ import { Money } from '#/components/accounts/money'
 import { NotFoundView } from '#/components/not-found-view'
 import { Button } from '#/components/ui/button'
 import { ACCOUNT_TYPE_INFO } from '#/lib/accounts'
+import { ReconcileDialog } from '#/components/accounts/reconcile-dialog'
 import { Register } from '#/components/register/register'
 import { closeAccount, reopenAccount } from '#/server/accounts'
 import { loadRegister } from '#/server/transactions'
@@ -70,6 +71,12 @@ function AccountPage() {
             {account.onBudget ? 'On budget' : 'Tracking'}
           </p>
           {account.note ? <p className="mt-2 text-sm">{account.note}</p> : null}
+          {account.lastReconciledAt ? (
+            <p className="text-muted-foreground mt-1 text-xs">
+              Last reconciled{' '}
+              {new Date(account.lastReconciledAt).toLocaleDateString()}
+            </p>
+          ) : null}
         </div>
         {canEdit ? (
           <div className="flex gap-2">
@@ -83,6 +90,15 @@ function AccountPage() {
                 <PencilIcon /> Edit
               </Button>
             </EditAccountDialog>
+            {!account.closed ? (
+              <ReconcileDialog
+                budgetId={budget.id}
+                accountId={account.id}
+                accountType={account.type}
+                clearedBalance={account.clearedBalance}
+                currency={budget.currency}
+              />
+            ) : null}
             <Button variant="outline" disabled={pending} onClick={toggleClosed}>
               {account.closed ? 'Reopen account' : 'Close account'}
             </Button>

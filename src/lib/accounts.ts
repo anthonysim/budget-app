@@ -104,3 +104,14 @@ export function moveWithinGroup(
   result[j] = id
   return result
 }
+
+export const reconcileAccountSchema = z.object({
+  budgetId: z.uuid(),
+  accountId: z.uuid(),
+  /** Balance shown by the bank, signed milliunits (debt accounts: negative). */
+  bankBalance: z.number().int().min(-1e12).max(1e12),
+  /** Create an adjustment transaction for any difference. */
+  createAdjustment: z.boolean(),
+  /** Client's local 'YYYY-MM-DD' for the adjustment transaction. */
+  adjustmentDate: dateSchema.optional(),
+})

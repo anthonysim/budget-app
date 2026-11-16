@@ -14,6 +14,8 @@ export interface RegisterMeta {
   inflowCategoryId: string | null
   /** Running balance by transaction id (account view only). */
   balances: Map<string, number>
+  /** Number of split lines per transaction id. */
+  splitCounts: Map<string, number>
   onEdit: (id: string) => void
   onToggleCleared: (row: TransactionRow) => void
 }
@@ -79,6 +81,8 @@ export function buildColumns({
       header: 'Category',
       cell: (c) => {
         const row = c.row.original
+        const splitCount = meta(c.table).splitCounts.get(row.id)
+        if (splitCount) return `Split (${splitCount})`
         if (
           row.categoryId &&
           row.categoryId === meta(c.table).inflowCategoryId
@@ -186,12 +190,16 @@ export function buildColumns({
       header: () => null,
       cell: ({ row, table }) => {
         const m = meta(table)
-        if (!m.canEdit || row.original.cleared === 'reconciled') return null
+        if (!m.canEdit) return null
         return (
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label="Edit transaction"
+            aria-label={
+              row.original.cleared === 'reconciled'
+                ? 'Edit reconciled transaction'
+                : 'Edit transaction'
+            }
             onClick={() => m.onEdit(row.original.id)}
           >
             <PencilIcon />

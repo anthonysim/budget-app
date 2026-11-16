@@ -61,6 +61,10 @@ export const accounts = pgTable(
     closed: boolean('closed').notNull().default(false),
     sort: integer('sort').notNull().default(0),
     note: text('note'),
+    lastReconciledAt: timestamp('last_reconciled_at', { withTimezone: true }),
+    lastReconciledBalance: bigint('last_reconciled_balance', {
+      mode: 'number',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -100,6 +104,28 @@ export const transactions = pgTable(
       columns: [t.budgetId, t.accountId],
       foreignColumns: [accounts.budgetId, accounts.id],
       name: 'transactions_account_budget_fk',
+    }).onDelete('cascade'),
+  ],
+).enableRLS()
+
+/** Lines of a split transaction. The parent keeps the total and has no category itself. */
+export const subtransactions = pgTable(
+  'subtransactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    budgetId: uuid('budget_id').notNull(),
+    transactionId: uuid('transaction_id').notNull(),
+    categoryId: uuid('category_id'),
+    memo: text('memo'),
+    /** Signed milliunits; lines sum to the parent amount. */
+    amount: bigint('amount', { mode: 'number' }).notNull(),
+    sort: integer('sort').notNull().default(0),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.budgetId, t.transactionId],
+      foreignColumns: [transactions.budgetId, transactions.id],
+      name: 'subtransactions_transaction_budget_fk',
     }).onDelete('cascade'),
   ],
 ).enableRLS()
