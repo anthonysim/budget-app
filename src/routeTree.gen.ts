@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedBudgetRouteImport } from './routes/_authed/budget'
+import { Route as AuthedReportsRouteImport } from './routes/_authed/reports'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
@@ -36,9 +38,19 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedAccountsRoute = AuthedAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedBudgetRoute = AuthedBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedReportsRoute = AuthedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthedRoute,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -56,7 +68,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/accounts': typeof AuthedAccountsRoute
   '/budget': typeof AuthedBudgetRoute
+  '/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -64,7 +78,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/accounts': typeof AuthedAccountsRoute
   '/budget': typeof AuthedBudgetRoute
+  '/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -74,23 +90,42 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/budget': typeof AuthedBudgetRoute
+  '/_authed/reports': typeof AuthedReportsRoute
   '/api/health': typeof ApiHealthRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/login' | '/signup' | '/budget' | '/api/health' | '/auth/callback'
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/accounts'
+    | '/budget'
+    | '/reports'
+    | '/api/health'
+    | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/budget' | '/api/health' | '/auth/callback'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/accounts'
+    | '/budget'
+    | '/reports'
+    | '/api/health'
+    | '/auth/callback'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/login'
     | '/signup'
+    | '/_authed/accounts'
     | '/_authed/budget'
+    | '/_authed/reports'
     | '/api/health'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
@@ -134,11 +169,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/accounts': {
+      id: '/_authed/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AuthedAccountsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/budget': {
       id: '/_authed/budget'
       path: '/budget'
       fullPath: '/budget'
       preLoaderRoute: typeof AuthedBudgetRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/reports': {
+      id: '/_authed/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthedReportsRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/api/health': {
@@ -159,11 +208,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthedRouteChildren {
+  AuthedAccountsRoute: typeof AuthedAccountsRoute
   AuthedBudgetRoute: typeof AuthedBudgetRoute
+  AuthedReportsRoute: typeof AuthedReportsRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAccountsRoute: AuthedAccountsRoute,
   AuthedBudgetRoute: AuthedBudgetRoute,
+  AuthedReportsRoute: AuthedReportsRoute,
 }
 
 const AuthedRouteWithChildren =

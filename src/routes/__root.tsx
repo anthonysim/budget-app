@@ -4,6 +4,9 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
 import { getCurrentUser } from '#/server/auth'
+import { ThemeProvider } from '#/components/theme-provider'
+import { Toaster } from '#/components/toaster'
+import { themeInitScript } from '#/lib/theme'
 
 export const Route = createRootRoute({
   // One verified auth lookup per navigation; child routes read context.user.
@@ -21,6 +24,7 @@ export const Route = createRootRoute({
         title: 'Budget',
       },
     ],
+    scripts: [{ children: themeInitScript }],
     links: [
       {
         rel: 'stylesheet',
@@ -33,12 +37,15 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
