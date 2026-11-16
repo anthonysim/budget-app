@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import {
   BarChart3Icon,
+  CalendarClockIcon,
   LandmarkIcon,
   ListTreeIcon,
   WalletIcon,
@@ -30,6 +31,11 @@ const NAV = [
     to: '/budgets/$budgetId/categories',
     label: 'Categories',
     icon: ListTreeIcon,
+  },
+  {
+    to: '/budgets/$budgetId/scheduled',
+    label: 'Scheduled',
+    icon: CalendarClockIcon,
   },
   {
     to: '/budgets/$budgetId/accounts',

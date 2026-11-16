@@ -18,3 +18,15 @@ export function formatDateString(date: string, format = 'MM/DD/YYYY'): string {
       return `${m}/${d}/${y}`
   }
 }
+
+/** 'YYYY-MM-DD' for the current UTC day shifted by `offsetDays`. */
+export function utcDateString(offsetDays = 0, now: Date = new Date()): string {
+  const t = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + offsetDays,
+    ),
+  )
+  return t.toISOString().slice(0, 10)
+}

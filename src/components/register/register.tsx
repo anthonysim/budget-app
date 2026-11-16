@@ -24,6 +24,8 @@ import {
 } from '#/server/transactions'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import type { CategoryGroupRow } from '#/server/categories-query'
+import type { ScheduledListRow } from '#/server/scheduled-query'
+import { UpcomingRows } from '#/components/register/upcoming-rows'
 import type {
   PayeeRow,
   SplitRow,
@@ -35,6 +37,7 @@ import { Money } from '#/components/accounts/money'
 interface RegisterData {
   transactions: Array<TransactionRow>
   splits: Array<SplitRow>
+  scheduled: Array<ScheduledListRow>
   payees: Array<PayeeRow>
   categoryGroups: Array<CategoryGroupRow>
   inflowCategoryId: string | null
@@ -311,6 +314,11 @@ export function Register({
           </thead>
           <tbody>
             {editingId === 'new' ? <EditRow {...editProps} /> : null}
+            <UpcomingRows
+              scheduled={data.scheduled}
+              accountId={accountId}
+              budget={budget}
+            />
             {table.getRowModel().rows.map((row) =>
               editingId === row.original.id ? (
                 <EditRow

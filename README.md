@@ -92,6 +92,16 @@ Pure functions in `src/domain/budget-math.ts` (unit tested in `budget-math.test.
 - **Ready to Assign** (month) = income through that month - assigned through that month - cash overspending of earlier months.
 - Assigned cells accept expressions relative to the current value: `+50`, `-20`, `*2`, `/2`, `100+25`.
 
+## Scheduled transactions and the cron job
+
+Scheduled transactions are entered as real (uncleared) transactions when they come due:
+
+- **Lazily**: whenever a budget is opened, anything due up to yesterday (UTC) is entered.
+- **Daily cron** (`vercel.json`, 08:00 UTC): `GET /api/cron/scheduled` enters everything due today for all budgets.
+  It requires `Authorization: Bearer $CRON_SECRET`; Vercel sends this automatically when the `CRON_SECRET`
+  env var is set. Generate a long random value, add it under Settings > Environment Variables (Production),
+  and never commit it. Without it the endpoint returns 503.
+
 ## Adding shadcn/ui components
 
 ```bash
