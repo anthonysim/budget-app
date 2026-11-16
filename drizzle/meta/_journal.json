@@ -85,6 +85,104 @@
       "when": 1794797453766,
       "tag": "0011_month_assignments_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794799028398,
+      "tag": "0012_transfers_cc",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794799032236,
+      "tag": "0013_transfers_cc_fks_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794799844183,
+      "tag": "0014_splits_reconcile",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794799846186,
+      "tag": "0015_splits_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794800700015,
+      "tag": "0016_scheduled",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794800701210,
+      "tag": "0017_scheduled_fks_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794801303683,
+      "tag": "0018_category_targets",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794801305135,
+      "tag": "0019_category_targets_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794801816193,
+      "tag": "0020_import_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794801818345,
+      "tag": "0021_import_rules_fks_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794803041079,
+      "tag": "0022_extras",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794803042248,
+      "tag": "0023_extras_checks_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794803662788,
+      "tag": "0024_budget_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794803665458,
+      "tag": "0025_budget_invites_rls",
+      "breakpoints": true
     }
   ]
 }

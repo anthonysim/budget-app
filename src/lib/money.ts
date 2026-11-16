@@ -35,3 +35,11 @@ export function parseMoneyInput(input: string): Milliunits | null {
   const milli = Number(whole || '0') * 1000 + Number((frac + '000').slice(0, 3))
   return negative ? -milli : milli
 }
+
+/** "19.99" or "19.99%" -> basis points (1999). Null if not a valid percentage 0 to 1000. */
+export function parsePercentToBps(input: string): number | null {
+  const t = input.trim().replace(/%$/, '').trim()
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return null
+  const bps = Math.round(Number(t) * 100)
+  return bps <= 100_000 ? bps : null
+}

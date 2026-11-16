@@ -7,6 +7,10 @@ import { Money } from '#/components/accounts/money'
 import { NotFoundView } from '#/components/not-found-view'
 import { Button } from '#/components/ui/button'
 import { ACCOUNT_TYPE_INFO } from '#/lib/accounts'
+import { LoanPlanner } from '#/components/accounts/loan-planner'
+import { ImportDialog } from '#/components/import/import-dialog'
+import { approveTransactions } from '#/server/import'
+import { ReconcileDialog } from '#/components/accounts/reconcile-dialog'
 import { Register } from '#/components/register/register'
 import { closeAccount, reopenAccount } from '#/server/accounts'
 import { loadRegister } from '#/server/transactions'
@@ -16,6 +20,12 @@ const layout = getRouteApi('/_authed/budgets/$budgetId')
 export const Route = createFileRoute(
   '/_authed/budgets/$budgetId/accounts/$accountId',
 )({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q:
+      typeof search.q === 'string' && search.q !== ''
+        ? search.q.slice(0, 100)
+        : undefined,
+  }),
   loader: ({ params }) =>
     loadRegister({
       data: { budgetId: params.budgetId, accountId: params.accountId },
@@ -25,6 +35,7 @@ export const Route = createFileRoute(
 
 function AccountPage() {
   const { accountId } = Route.useParams()
+  const { q } = Route.useSearch()
   const register = Route.useLoaderData()
   const { budget, accounts } = layout.useLoaderData()
   const router = useRouter()
@@ -32,6 +43,9 @@ function AccountPage() {
   const account = accounts.find((a) => a.id === accountId)
   if (!account) return <NotFoundView />
   const canEdit = budget.role !== 'viewer'
+  const unapprovedCount = register.transactions.filter(
+    (t) => !t.approved,
+  ).length
   const wasClosed = account.closed
 
   function toggleClosed() {
@@ -70,6 +84,12 @@ function AccountPage() {
             {account.onBudget ? 'On budget' : 'Tracking'}
           </p>
           {account.note ? <p className="mt-2 text-sm">{account.note}</p> : null}
+          {account.lastReconciledAt ? (
+            <p className="text-muted-foreground mt-1 text-xs">
+              Last reconciled{' '}
+              {new Date(account.lastReconciledAt).toLocaleDateString()}
+            </p>
+          ) : null}
         </div>
         {canEdit ? (
           <div className="flex gap-2">
@@ -78,17 +98,68 @@ function AccountPage() {
               accountId={account.id}
               name={account.name}
               note={account.note}
+              debt={ACCOUNT_TYPE_INFO[account.type].debt}
+              aprBps={account.aprBps}
+              minPayment={account.minPayment}
             >
               <Button variant="outline">
                 <PencilIcon /> Edit
               </Button>
             </EditAccountDialog>
+            {!account.closed ? (
+              <ImportDialog
+                budgetId={budget.id}
+                accountId={account.id}
+                savedMapping={account.importMapping}
+                currency={budget.currency}
+              />
+            ) : null}
+            {!account.closed ? (
+              <ReconcileDialog
+                budgetId={budget.id}
+                accountId={account.id}
+                accountType={account.type}
+                clearedBalance={account.clearedBalance}
+                currency={budget.currency}
+              />
+            ) : null}
             <Button variant="outline" disabled={pending} onClick={toggleClosed}>
               {account.closed ? 'Reopen account' : 'Close account'}
             </Button>
           </div>
         ) : null}
       </div>
+
+      {unapprovedCount > 0 && canEdit ? (
+        <div
+          role="status"
+          className="bg-muted flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2 text-sm"
+        >
+          <span>
+            {unapprovedCount} transaction{unapprovedCount === 1 ? '' : 's'} to
+            approve
+          </span>
+          <Button
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                try {
+                  await approveTransactions({
+                    data: { budgetId: budget.id, accountId: account.id },
+                  })
+                  await router.invalidate()
+                  toast.success('Approved')
+                } catch {
+                  toast.error('Could not approve')
+                }
+              })
+            }
+          >
+            Approve all
+          </Button>
+        </div>
+      ) : null}
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {balances.map((b) => (
@@ -101,7 +172,19 @@ function AccountPage() {
         ))}
       </dl>
 
+      {ACCOUNT_TYPE_INFO[account.type].debt && account.workingBalance < 0 ? (
+        <LoanPlanner
+          key={`${account.aprBps}-${account.minPayment}`}
+          owed={-account.workingBalance}
+          aprBps={account.aprBps}
+          minPayment={account.minPayment}
+          currency={budget.currency}
+        />
+      ) : null}
+
       <Register
+        key={q}
+        initialQuery={q}
         budget={budget}
         accounts={accounts}
         data={register}

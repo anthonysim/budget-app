@@ -1,8 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import {
   BarChart3Icon,
+  CalendarClockIcon,
   LandmarkIcon,
   ListTreeIcon,
+  ReplaceIcon,
+  UsersIcon,
   WalletIcon,
 } from 'lucide-react'
 import {
@@ -30,6 +33,21 @@ const NAV = [
     to: '/budgets/$budgetId/categories',
     label: 'Categories',
     icon: ListTreeIcon,
+  },
+  {
+    to: '/budgets/$budgetId/members',
+    label: 'Sharing',
+    icon: UsersIcon,
+  },
+  {
+    to: '/budgets/$budgetId/payee-rules',
+    label: 'Payee rules',
+    icon: ReplaceIcon,
+  },
+  {
+    to: '/budgets/$budgetId/scheduled',
+    label: 'Scheduled',
+    icon: CalendarClockIcon,
   },
   {
     to: '/budgets/$budgetId/accounts',

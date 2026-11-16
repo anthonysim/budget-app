@@ -1,8 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { accounts, transactions } from '#/db/schema'
+import { accounts, categories, transactions } from '#/db/schema'
 import {
+  ACCOUNT_TYPE_INFO,
   accountRefSchema,
   createAccountSchema,
   isOnBudgetType,
@@ -13,6 +14,8 @@ import {
 import { requireBudgetRole } from '#/server/budget-access'
 import { queryInflowCategoryId } from '#/server/categories-query'
 import { findOrCreatePayee } from '#/server/payees'
+import { ensurePaymentCategory } from '#/server/payment-categories'
+import { getAccount } from '#/server/transaction-writes'
 
 export const createAccount = createServerFn({ method: 'POST' })
   .validator(createAccountSchema)
@@ -34,6 +37,9 @@ export const createAccount = createServerFn({ method: 'POST' })
         })
         .returning({ id: accounts.id })
       if (!account) throw new Error('Failed to create account')
+      if (data.type === 'credit_card') {
+        await ensurePaymentCategory(tx, data.budgetId, account.id, data.name)
+      }
       const balance = startingBalanceFor(data.type, data.startingBalance)
       if (balance !== 0) {
         const payeeId = await findOrCreatePayee(
@@ -41,10 +47,12 @@ export const createAccount = createServerFn({ method: 'POST' })
           data.budgetId,
           'Starting Balance',
         )
-        // on-budget starting balances are income: they feed Ready to Assign
-        const categoryId = isOnBudgetType(data.type)
-          ? await queryInflowCategoryId(data.budgetId)
-          : null
+        // on-budget asset balances are income (feed Ready to Assign); debt balances are
+        // pre-budget debt and tracking accounts have no categories
+        const categoryId =
+          isOnBudgetType(data.type) && !ACCOUNT_TYPE_INFO[data.type].debt
+            ? await queryInflowCategoryId(data.budgetId)
+            : null
         await tx.insert(transactions).values({
           budgetId: data.budgetId,
           accountId: account.id,
@@ -65,15 +73,38 @@ export const updateAccount = createServerFn({ method: 'POST' })
   .validator(updateAccountSchema)
   .handler(async ({ data }) => {
     await requireBudgetRole(data.budgetId, 'editor')
-    await db()
-      .update(accounts)
-      .set({ name: data.name, note: data.note || null })
-      .where(
-        and(
-          eq(accounts.id, data.accountId),
-          eq(accounts.budgetId, data.budgetId),
-        ),
-      )
+    await db().transaction(async (tx) => {
+      const account = await getAccount(tx, data.budgetId, data.accountId)
+      // APR and minimum payment only make sense for debt accounts
+      const debt = ACCOUNT_TYPE_INFO[account.type].debt
+      await tx
+        .update(accounts)
+        .set({
+          name: data.name,
+          note: data.note || null,
+          ...(debt && data.aprBps !== undefined ? { aprBps: data.aprBps } : {}),
+          ...(debt && data.minPayment !== undefined
+            ? { minPayment: data.minPayment }
+            : {}),
+        })
+        .where(
+          and(
+            eq(accounts.id, data.accountId),
+            eq(accounts.budgetId, data.budgetId),
+          ),
+        )
+      // a credit card's payment category is named after the card
+      await tx
+        .update(categories)
+        .set({ name: data.name })
+        .where(
+          and(
+            eq(categories.budgetId, data.budgetId),
+            eq(categories.linkedAccountId, data.accountId),
+            eq(categories.systemKind, 'cc_payment'),
+          ),
+        )
+    })
   })
 
 async function setClosed(budgetId: string, accountId: string, closed: boolean) {

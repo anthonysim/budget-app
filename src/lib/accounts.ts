@@ -71,6 +71,9 @@ export const updateAccountSchema = z.object({
   accountId: z.uuid(),
   name: accountNameSchema,
   note: z.string().trim().max(500).nullable(),
+  /** Debt accounts only; ignored for other types. Basis points: 1999 = 19.99%. */
+  aprBps: z.number().int().min(0).max(100_000).nullable().optional(),
+  minPayment: z.number().int().min(0).max(1e12).nullable().optional(),
 })
 
 export const accountRefSchema = z.object({
@@ -104,3 +107,14 @@ export function moveWithinGroup(
   result[j] = id
   return result
 }
+
+export const reconcileAccountSchema = z.object({
+  budgetId: z.uuid(),
+  accountId: z.uuid(),
+  /** Balance shown by the bank, signed milliunits (debt accounts: negative). */
+  bankBalance: z.number().int().min(-1e12).max(1e12),
+  /** Create an adjustment transaction for any difference. */
+  createAdjustment: z.boolean(),
+  /** Client's local 'YYYY-MM-DD' for the adjustment transaction. */
+  adjustmentDate: dateSchema.optional(),
+})

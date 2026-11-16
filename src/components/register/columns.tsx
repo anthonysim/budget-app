@@ -1,9 +1,17 @@
 import { createColumnHelper } from '@tanstack/react-table'
-import { LockIcon, PencilIcon } from 'lucide-react'
+import { CheckCheckIcon, FlagIcon, LockIcon, PencilIcon } from 'lucide-react'
 import { Money } from '#/components/accounts/money'
+import { FlagDot } from '#/components/register/flag-dot'
 import { Button } from '#/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { formatDateString } from '#/lib/date'
-import { splitAmount } from '#/lib/transactions'
+import { FLAGS, FLAG_COLORS, splitAmount } from '#/lib/transactions'
+import type { Flag } from '#/lib/transactions'
 import { cn } from '#/lib/utils'
 import type { TransactionRow } from '#/server/transactions-query'
 
@@ -14,7 +22,11 @@ export interface RegisterMeta {
   inflowCategoryId: string | null
   /** Running balance by transaction id (account view only). */
   balances: Map<string, number>
+  /** Number of split lines per transaction id. */
+  splitCounts: Map<string, number>
   onEdit: (id: string) => void
+  onApprove: (row: TransactionRow) => void
+  onFlag: (row: TransactionRow, flag: Flag | null) => void
   onToggleCleared: (row: TransactionRow) => void
 }
 
@@ -72,13 +84,19 @@ export function buildColumns({
     }),
     helper.accessor('payeeName', {
       header: 'Payee',
-      cell: (c) =>
-        c.getValue() ?? <span className="text-muted-foreground">—</span>,
+      cell: (c) => (
+        <>
+          <FlagDot flag={c.row.original.flag} />
+          {c.getValue() ?? <span className="text-muted-foreground">—</span>}
+        </>
+      ),
     }),
     helper.accessor('categoryName', {
       header: 'Category',
       cell: (c) => {
         const row = c.row.original
+        const splitCount = meta(c.table).splitCounts.get(row.id)
+        if (splitCount) return `Split (${splitCount})`
         if (
           row.categoryId &&
           row.categoryId === meta(c.table).inflowCategoryId
@@ -186,16 +204,65 @@ export function buildColumns({
       header: () => null,
       cell: ({ row, table }) => {
         const m = meta(table)
-        if (!m.canEdit || row.original.cleared === 'reconciled') return null
+        if (!m.canEdit) return null
         return (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Edit transaction"
-            onClick={() => m.onEdit(row.original.id)}
-          >
-            <PencilIcon />
-          </Button>
+          <div className="flex justify-end gap-0.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Flag transaction"
+                >
+                  <FlagIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {FLAGS.map((f) => (
+                  <DropdownMenuItem
+                    key={f}
+                    onSelect={() => m.onFlag(row.original, f)}
+                  >
+                    <span
+                      aria-hidden
+                      className="inline-block size-2.5 rounded-full"
+                      style={{ background: FLAG_COLORS[f] }}
+                    />
+                    <span className="capitalize">{f}</span>
+                  </DropdownMenuItem>
+                ))}
+                {row.original.flag ? (
+                  <DropdownMenuItem
+                    onSelect={() => m.onFlag(row.original, null)}
+                  >
+                    No flag
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {!row.original.approved ? (
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Approve transaction"
+                onClick={() => m.onApprove(row.original)}
+              >
+                <CheckCheckIcon /> Approve
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={
+                row.original.cleared === 'reconciled'
+                  ? 'Edit reconciled transaction'
+                  : 'Edit transaction'
+              }
+              onClick={() => m.onEdit(row.original.id)}
+            >
+              <PencilIcon />
+            </Button>
+          </div>
         )
       },
     }),

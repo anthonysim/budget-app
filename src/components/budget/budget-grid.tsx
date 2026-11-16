@@ -2,9 +2,13 @@ import { Fragment, useEffect, useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   ArrowLeftRightIcon,
+  ChevronsUpDownIcon,
+  TargetIcon,
+  WandSparklesIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   Redo2Icon,
+  StickyNoteIcon,
   Undo2Icon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -14,6 +18,17 @@ import { AssignedCell } from '#/components/budget/assigned-cell'
 import { AvailablePill } from '#/components/budget/available-pill'
 import { useAssignmentHistory } from '#/components/budget/history'
 import { MonthNav } from '#/components/budget/month-nav'
+import { TargetDialog } from '#/components/budget/target-dialog'
+import { TargetProgress } from '#/components/budget/target-progress'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
+import { AUTO_ASSIGN_LABELS, autoAssignChanges } from '#/lib/auto-assign'
+import type { AutoAssignAction } from '#/lib/auto-assign'
+import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
 import { RtaBanner } from '#/components/budget/rta-banner'
 import { setAssignments } from '#/server/budget-month'
@@ -31,6 +46,7 @@ export function BudgetGrid({
   const history = useAssignmentHistory(budget.id)
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [moveFrom, setMoveFrom] = useState<BudgetCategoryRow | null>(null)
+  const [targetFor, setTargetFor] = useState<BudgetCategoryRow | null>(null)
   const [, startSave] = useTransition()
 
   const allCategories = view.groups.flatMap((g) => g.categories)
@@ -88,6 +104,48 @@ export function BudgetGrid({
     })
   }
 
+  function runAutoAssign(action: AutoAssignAction) {
+    const rows = allCategories
+      .filter((c) => !c.hidden)
+      .map((c) => ({
+        id: c.id,
+        assigned: c.assigned,
+        underfunded: c.target?.underfunded ?? 0,
+        ...c.history,
+      }))
+    const changes = autoAssignChanges(action, rows)
+    if (changes.length === 0) {
+      toast('Nothing to change')
+      return
+    }
+    const before = changes.map((c) => ({
+      categoryId: c.categoryId,
+      month: view.month,
+      assigned: c.from,
+    }))
+    const after = changes.map((c) => ({
+      categoryId: c.categoryId,
+      month: view.month,
+      assigned: c.to,
+    }))
+    startSave(async () => {
+      try {
+        await setAssignments({ data: { budgetId: budget.id, changes: after } })
+        history.record({
+          label: AUTO_ASSIGN_LABELS[action].toLowerCase(),
+          before,
+          after,
+        })
+        toast.success(
+          `Updated ${changes.length} categor${changes.length === 1 ? 'y' : 'ies'}`,
+        )
+      } catch {
+        toast.error('Could not apply that')
+      }
+      await router.invalidate()
+    })
+  }
+
   function onMoved(from: BudgetCategoryRow, toId: string, amount: number) {
     const to = allCategories.find((c) => c.id === toId)
     if (!to) return
@@ -127,6 +185,25 @@ export function BudgetGrid({
         <MonthNav budgetId={budget.id} month={view.month} />
         {canEdit ? (
           <div className="flex gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <WandSparklesIcon /> Auto-assign <ChevronsUpDownIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {(
+                  Object.keys(AUTO_ASSIGN_LABELS) as Array<AutoAssignAction>
+                ).map((action) => (
+                  <DropdownMenuItem
+                    key={action}
+                    onSelect={() => runAutoAssign(action)}
+                  >
+                    {AUTO_ASSIGN_LABELS[action]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="outline"
               size="sm"
@@ -148,6 +225,13 @@ export function BudgetGrid({
           </div>
         ) : null}
       </div>
+
+      <MonthNote
+        budgetId={budget.id}
+        month={view.month}
+        note={view.monthNote}
+        canEdit={canEdit}
+      />
 
       <RtaBanner
         readyToAssign={view.readyToAssign}
@@ -211,6 +295,24 @@ export function BudgetGrid({
                             }
                           >
                             {c.name}
+                            {c.note ? (
+                              <span
+                                className="text-muted-foreground ml-2 inline-flex items-center"
+                                title={c.note}
+                              >
+                                <StickyNoteIcon
+                                  className="size-3.5"
+                                  aria-hidden
+                                />
+                                <span className="sr-only">Note: {c.note}</span>
+                              </span>
+                            ) : null}
+                            {c.target ? (
+                              <TargetProgress
+                                target={c.target}
+                                currency={budget.currency}
+                              />
+                            ) : null}
                           </td>
                           <td className="px-3 py-1 text-right">
                             <AssignedCell
@@ -235,14 +337,24 @@ export function BudgetGrid({
                           </td>
                           <td className="px-2 py-1">
                             {canEdit ? (
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={`Move money from ${c.name}`}
-                                onClick={() => setMoveFrom(c)}
-                              >
-                                <ArrowLeftRightIcon />
-                              </Button>
+                              <div className="flex gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={`Set target for ${c.name}`}
+                                  onClick={() => setTargetFor(c)}
+                                >
+                                  <TargetIcon />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={`Move money from ${c.name}`}
+                                  onClick={() => setMoveFrom(c)}
+                                >
+                                  <ArrowLeftRightIcon />
+                                </Button>
+                              </div>
                             ) : null}
                           </td>
                         </tr>
@@ -275,6 +387,23 @@ export function BudgetGrid({
           </tbody>
         </table>
       </div>
+
+      {targetFor ? (
+        <TargetDialog
+          key={targetFor.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setTargetFor(null)
+          }}
+          budgetId={budget.id}
+          category={targetFor}
+          isPaymentCategory={view.groups.some(
+            (g) =>
+              g.name === 'Credit Card Payments' &&
+              g.categories.some((c) => c.id === targetFor.id),
+          )}
+        />
+      ) : null}
 
       {moveFrom ? (
         <MoveMoneyDialog

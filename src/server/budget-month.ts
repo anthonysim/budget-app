@@ -1,13 +1,15 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, monthAssignments } from '#/db/schema'
+import { categories, monthAssignments, monthNotes } from '#/db/schema'
 import {
   loadBudgetMonthSchema,
   moveMoneySchema,
+  saveMonthNoteSchema,
   setAssignmentsSchema,
 } from '#/lib/budget-month'
 import { requireBudgetRole } from '#/server/budget-access'
+import type { Db } from '#/server/db-types'
 import { queryBudgetMonth } from '#/server/budget-month-query'
 
 export const loadBudgetMonth = createServerFn({ method: 'GET' })
@@ -17,9 +19,10 @@ export const loadBudgetMonth = createServerFn({ method: 'GET' })
     return queryBudgetMonth(data.budgetId, data.month)
   })
 
-/** The categories must belong to the budget and must not be the system Inflow category. */
+/** The categories must belong to the budget and must not be the system Inflow category
+ * (credit card payment categories are allowed). */
 async function assertAssignable(
-  tx: Pick<ReturnType<typeof db>, 'select'>,
+  tx: Pick<Db, 'select'>,
   budgetId: string,
   categoryIds: Array<string>,
 ) {
@@ -31,7 +34,7 @@ async function assertAssignable(
       and(
         eq(categories.budgetId, budgetId),
         inArray(categories.id, unique),
-        sql`${categories.systemKind} is null`,
+        sql`${categories.systemKind} is distinct from 'inflow'`,
       ),
     )
   if (rows.length !== unique.length) throw new Error('Not found')
@@ -96,4 +99,29 @@ export const moveMoney = createServerFn({ method: 'POST' })
           })
       }
     })
+  })
+
+/** Saves (or clears, when empty) the note for a budget month. */
+export const saveMonthNote = createServerFn({ method: 'POST' })
+  .validator(saveMonthNoteSchema)
+  .handler(async ({ data }) => {
+    await requireBudgetRole(data.budgetId, 'editor')
+    if (data.note === '') {
+      await db()
+        .delete(monthNotes)
+        .where(
+          and(
+            eq(monthNotes.budgetId, data.budgetId),
+            eq(monthNotes.month, data.month),
+          ),
+        )
+      return
+    }
+    await db()
+      .insert(monthNotes)
+      .values({ budgetId: data.budgetId, month: data.month, note: data.note })
+      .onConflictDoUpdate({
+        target: [monthNotes.budgetId, monthNotes.month],
+        set: { note: data.note, updatedAt: sql`now()` },
+      })
   })

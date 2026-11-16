@@ -1,7 +1,14 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import { db } from '#/db'
-import { accounts, categories, payees, transactions } from '#/db/schema'
-import type { ClearedStatus } from '#/lib/transactions'
+import {
+  accounts,
+  categories,
+  payees,
+  subtransactions,
+  transactions,
+} from '#/db/schema'
+import type { ClearedStatus, Flag } from '#/lib/transactions'
 
 // Server-only query helpers (no createServerFn; see accounts-query.ts for why).
 
@@ -13,9 +20,13 @@ export interface TransactionRow {
   amount: number
   memo: string | null
   cleared: ClearedStatus
+  approved: boolean
+  flag: Flag | null
   payeeName: string | null
   categoryId: string | null
   categoryName: string | null
+  /** Set when this row is one side of a transfer. */
+  transferAccountId: string | null
 }
 
 /** Oldest first (date, then creation order). One account, or all accounts in the budget. */
@@ -23,6 +34,7 @@ export async function queryTransactions(
   budgetId: string,
   accountId?: string,
 ): Promise<Array<TransactionRow>> {
+  const transferAccount = alias(accounts, 'transfer_account')
   return db()
     .select({
       id: transactions.id,
@@ -32,14 +44,23 @@ export async function queryTransactions(
       amount: transactions.amount,
       memo: transactions.memo,
       cleared: transactions.cleared,
-      payeeName: payees.name,
+      approved: transactions.approved,
+      flag: transactions.flag,
+      payeeName: sql<
+        string | null
+      >`case when ${transactions.transferAccountId} is not null then 'Transfer: ' || ${transferAccount.name} else ${payees.name} end`,
       categoryId: transactions.categoryId,
       categoryName: categories.name,
+      transferAccountId: transactions.transferAccountId,
     })
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .leftJoin(payees, eq(payees.id, transactions.payeeId))
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(
+      transferAccount,
+      eq(transferAccount.id, transactions.transferAccountId),
+    )
     .where(
       and(
         eq(transactions.budgetId, budgetId),
@@ -70,4 +91,39 @@ export function queryPayees(budgetId: string): Promise<Array<PayeeRow>> {
       ),
     )
     .orderBy(asc(payees.name))
+}
+
+export interface SplitRow {
+  id: string
+  transactionId: string
+  categoryId: string | null
+  categoryName: string | null
+  memo: string | null
+  amount: number
+}
+
+/** Split lines for the transactions of one account (or the whole budget). */
+export function querySplits(
+  budgetId: string,
+  accountId?: string,
+): Promise<Array<SplitRow>> {
+  return db()
+    .select({
+      id: subtransactions.id,
+      transactionId: subtransactions.transactionId,
+      categoryId: subtransactions.categoryId,
+      categoryName: categories.name,
+      memo: subtransactions.memo,
+      amount: subtransactions.amount,
+    })
+    .from(subtransactions)
+    .innerJoin(transactions, eq(transactions.id, subtransactions.transactionId))
+    .leftJoin(categories, eq(categories.id, subtransactions.categoryId))
+    .where(
+      and(
+        eq(subtransactions.budgetId, budgetId),
+        accountId ? eq(transactions.accountId, accountId) : undefined,
+      ),
+    )
+    .orderBy(asc(subtransactions.sort))
 }
