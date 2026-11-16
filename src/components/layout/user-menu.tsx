@@ -1,5 +1,5 @@
 import { useRouter } from '@tanstack/react-router'
-import { ChevronsUpDownIcon, LogOutIcon } from 'lucide-react'
+import { CircleUserIcon, LogOutIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { SidebarMenuButton } from '#/components/ui/sidebar'
+import { Button } from '#/components/ui/button'
 import { signOut } from '#/server/auth'
 
 export function UserMenu({ email }: { email: string }) {
@@ -25,12 +25,11 @@ export function UserMenu({ email }: { email: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <SidebarMenuButton size="lg" tooltip={email}>
-          <span className="truncate text-sm">{email}</span>
-          <ChevronsUpDownIcon className="ml-auto" />
-        </SidebarMenuButton>
+        <Button variant="ghost" size="icon" aria-label="Account menu">
+          <CircleUserIcon />
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" className="w-56">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="truncate">{email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void onSignOut()}>
