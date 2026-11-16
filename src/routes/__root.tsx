@@ -3,8 +3,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
+import { getCurrentUser } from '#/server/auth'
 
 export const Route = createRootRoute({
+  // One verified auth lookup per navigation; child routes read context.user.
+  beforeLoad: async () => ({ user: await getCurrentUser() }),
   head: () => ({
     meta: [
       {
