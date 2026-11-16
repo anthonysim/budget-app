@@ -104,6 +104,21 @@ Scheduled transactions are entered as real (uncleared) transactions when they co
   env var is set. Generate a long random value, add it under Settings > Environment Variables (Production),
   and never commit it. Without it the endpoint returns 503.
 
+## Sharing
+
+Owners invite people by email from **Sharing** (sidebar) as **Editor** (can change anything) or **Viewer** (read only). There is exactly one owner: the creator, who alone manages members and deletes the budget.
+
+- **No email is sent.** An invitation is a pending row; the invitee sees it as a banner after signing in with that address and can Accept or Decline. Owners can withdraw invitations, change roles, and remove members; members other than the owner can leave.
+- **Security requirement for hosted Supabase:** turn on **Confirm email** (Authentication > Providers > Email). Accepting an invitation requires the signed-in user's email to be confirmed and to match the invitation; without confirmation anyone could claim an invitation by signing up with someone else's address. Local Supabase auto-confirms, so this is only enforced when confirmation is on.
+- Access is enforced on the server for every write (`requireBudgetRole`); the UI hides controls a viewer cannot use. RLS policies are a backstop.
+
+## Payoff planner, notes, flags and search
+
+- **Debt accounts** (credit card, line of credit, liability, mortgage, loan): set the APR and minimum payment under Edit. The account page then shows a payoff planner (`src/domain/payoff.ts`): monthly interest at APR/12, payoff date, total interest, and an "extra each month" what-if with months and interest saved. A payment that does not cover the interest is flagged.
+- **Notes**: a note per category (Categories page; shown as an icon on the budget screen) and a note per budget month (saved when the field loses focus).
+- **Flags**: six colors on transactions (flag menu per row, bulk "Flag as", filter by flag). The color is always paired with its name for screen readers.
+- **Search**: Cmd/Ctrl+K or the Search button finds accounts, categories and transactions (payee, memo, category, amount); wildcard characters match literally. Enter opens the result with the register search pre-filled.
+
 ## Reports
 
 Reports page: Net worth and Age of Money tiles, spending breakdown (by category, category group or payee), income vs expense by month, net worth over time, and Age of Money over time. One filter row (date range presets or custom, account, spending dimension) scopes everything; the URL holds the filters. Every chart has a Table view.

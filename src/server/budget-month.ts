@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, monthAssignments } from '#/db/schema'
+import { categories, monthAssignments, monthNotes } from '#/db/schema'
 import {
   loadBudgetMonthSchema,
   moveMoneySchema,
+  saveMonthNoteSchema,
   setAssignmentsSchema,
 } from '#/lib/budget-month'
 import { requireBudgetRole } from '#/server/budget-access'
@@ -98,4 +99,29 @@ export const moveMoney = createServerFn({ method: 'POST' })
           })
       }
     })
+  })
+
+/** Saves (or clears, when empty) the note for a budget month. */
+export const saveMonthNote = createServerFn({ method: 'POST' })
+  .validator(saveMonthNoteSchema)
+  .handler(async ({ data }) => {
+    await requireBudgetRole(data.budgetId, 'editor')
+    if (data.note === '') {
+      await db()
+        .delete(monthNotes)
+        .where(
+          and(
+            eq(monthNotes.budgetId, data.budgetId),
+            eq(monthNotes.month, data.month),
+          ),
+        )
+      return
+    }
+    await db()
+      .insert(monthNotes)
+      .values({ budgetId: data.budgetId, month: data.month, note: data.note })
+      .onConflictDoUpdate({
+        target: [monthNotes.budgetId, monthNotes.month],
+        set: { note: data.note, updatedAt: sql`now()` },
+      })
   })

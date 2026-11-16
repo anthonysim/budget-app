@@ -147,9 +147,11 @@ export const updateCategory = createServerFn({ method: 'POST' })
       hidden?: boolean
       groupId?: string
       sort?: number
+      note?: string | null
     } = {}
     if (data.name !== undefined) set.name = data.name
     if (data.hidden !== undefined) set.hidden = data.hidden
+    if (data.note !== undefined) set.note = data.note || null
     if (data.groupId !== undefined) {
       const [group] = await db()
         .select({ id: categoryGroups.id })

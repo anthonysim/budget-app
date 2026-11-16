@@ -69,6 +69,7 @@ export interface BudgetCategoryRow {
   activity: number
   available: number
   overspent: 'cash' | 'credit' | null
+  note: string | null
   target: TargetView | null
   history: CategoryHistory
 }
@@ -85,7 +86,16 @@ export interface BudgetGroupRow {
 
 export interface BudgetMonthView {
   month: string
+  /** Free-text note for this month. */
+  monthNote: string | null
   readyToAssign: number
   totals: { assigned: number; activity: number; available: number }
   groups: Array<BudgetGroupRow>
 }
+
+export const saveMonthNoteSchema = z.object({
+  budgetId: z.uuid(),
+  month: monthSchema,
+  /** Empty clears the note. */
+  note: z.string().trim().max(2000),
+})

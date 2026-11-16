@@ -1,6 +1,11 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '#/db'
-import { categories, categoryTargets, monthAssignments } from '#/db/schema'
+import {
+  categories,
+  categoryTargets,
+  monthAssignments,
+  monthNotes,
+} from '#/db/schema'
 import { computeBudgetMonth } from '#/domain/budget-math'
 import { computeTargetProgress } from '#/domain/targets'
 import type { Target } from '#/domain/targets'
@@ -140,7 +145,7 @@ export async function queryBudgetMonth(
   budgetId: string,
   month: string,
 ): Promise<BudgetMonthView> {
-  const [input, groups, targetRows] = await Promise.all([
+  const [input, groups, targetRows, noteRows] = await Promise.all([
     queryBudgetMathInput(budgetId),
     queryCategoryGroups(budgetId, { includeCreditCardPayments: true }),
     db()
@@ -154,6 +159,13 @@ export async function queryBudgetMonth(
       })
       .from(categoryTargets)
       .where(eq(categoryTargets.budgetId, budgetId)),
+    db()
+      .select({ note: monthNotes.note })
+      .from(monthNotes)
+      .where(
+        and(eq(monthNotes.budgetId, budgetId), eq(monthNotes.month, month)),
+      )
+      .limit(1),
   ])
   const result = computeBudgetMonth(input, month)
   // earlier months feed the quick-budget actions (last month, 3 month average)
@@ -199,6 +211,7 @@ export async function queryBudgetMonth(
         activity: m?.activity ?? 0,
         available: m?.available ?? 0,
         overspent: m?.overspent ?? null,
+        note: c.note,
         target: null,
         history: historyFor(c.id),
       }
@@ -229,6 +242,7 @@ export async function queryBudgetMonth(
 
   return {
     month,
+    monthNote: noteRows[0]?.note ?? null,
     readyToAssign: result.readyToAssign,
     totals: {
       assigned: result.totals.assigned,

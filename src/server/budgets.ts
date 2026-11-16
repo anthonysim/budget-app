@@ -11,6 +11,7 @@ import { firstOfMonth } from '#/lib/month'
 import { requireBudgetRole } from '#/server/budget-access'
 import { seedDefaultCategories } from '#/server/categories-seed'
 import { queryAccounts } from '#/server/accounts-query'
+import { queryMyInvites } from '#/server/members-query'
 import { materializeDue } from '#/server/scheduled-materialize'
 import { utcDateString } from '#/lib/date'
 import { requireUser } from '#/server/require-user'
@@ -62,7 +63,11 @@ export const loadBudgetShell = createServerFn({ method: 'GET' })
     // Enter scheduled transactions that came due. Up to yesterday (UTC) so a user west of UTC
     // never sees tomorrow's transaction early; the daily cron job covers today.
     await materializeDue(utcDateString(-1), data.budgetId)
-    return { budget, accounts: await queryAccounts(data.budgetId) }
+    const [accountRows, invites] = await Promise.all([
+      queryAccounts(data.budgetId),
+      queryMyInvites(user.email),
+    ])
+    return { budget, accounts: accountRows, invites }
   })
 
 export const createBudget = createServerFn({ method: 'POST' })
