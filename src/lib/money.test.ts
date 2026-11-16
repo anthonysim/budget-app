@@ -4,6 +4,7 @@ import {
   formatMilliunits,
   milliunitsToDollars,
   parseMoneyInput,
+  parsePercentToBps,
 } from './money'
 
 describe('money', () => {
@@ -33,5 +34,16 @@ describe('money', () => {
     expect(parseMoneyInput('abc')).toBeNull()
     expect(parseMoneyInput('1.2345')).toBeNull()
     expect(parseMoneyInput('1.2.3')).toBeNull()
+  })
+
+  it('parses percentages to basis points', () => {
+    expect(parsePercentToBps('19.99')).toBe(1999)
+    expect(parsePercentToBps('24%')).toBe(2400)
+    expect(parsePercentToBps(' 5.5 % ')).toBe(550)
+    expect(parsePercentToBps('0')).toBe(0)
+    expect(parsePercentToBps('1000.01')).toBeNull()
+    expect(parsePercentToBps('abc')).toBeNull()
+    expect(parsePercentToBps('-3')).toBeNull()
+    expect(parsePercentToBps('1.234')).toBeNull()
   })
 })

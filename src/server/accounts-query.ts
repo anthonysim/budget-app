@@ -19,6 +19,9 @@ export function queryAccounts(budgetId: string) {
       closed: accounts.closed,
       sort: accounts.sort,
       note: accounts.note,
+      importMapping: accounts.importMapping,
+      aprBps: accounts.aprBps,
+      minPayment: accounts.minPayment,
       lastReconciledAt: accounts.lastReconciledAt,
       lastReconciledBalance: accounts.lastReconciledBalance,
       clearedBalance: sum(

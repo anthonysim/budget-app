@@ -110,3 +110,30 @@
     @apply bg-background text-foreground m-0;
   }
 }
+
+/* Chart tokens (validated palette: blue/orange categorical, same hues stepped for dark). */
+.viz-root {
+  --viz-surface: #fcfcfb;
+  --viz-ink: #0b0b0b;
+  --viz-ink-2: #52514e;
+  --viz-muted: #898781;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-s1: #2a78d6; /* income / the single series */
+  --viz-s2: #eb6834; /* expense */
+  --viz-good: #006300;
+  --viz-critical: #d03b3b;
+}
+
+.dark .viz-root {
+  --viz-surface: #1a1a19;
+  --viz-ink: #f0efec;
+  --viz-ink-2: #c3c2b7;
+  --viz-muted: #898781;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-s1: #3987e5;
+  --viz-s2: #d95926;
+  --viz-good: #0ca30c;
+  --viz-critical: #d03b3b;
+}

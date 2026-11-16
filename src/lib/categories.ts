@@ -40,6 +40,8 @@ export const updateCategorySchema = z.object({
   hidden: z.boolean().optional(),
   /** Move to another group (appended at the end). */
   groupId: z.uuid().optional(),
+  /** Free-text note; null or empty clears it. */
+  note: z.string().trim().max(500).nullable().optional(),
 })
 
 export const categoryRefSchema = z.object({ budgetId, categoryId: z.uuid() })

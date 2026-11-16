@@ -15,11 +15,14 @@ import { buildColumns } from '#/components/register/columns'
 import type { RegisterMeta } from '#/components/register/columns'
 import { EditRow } from '#/components/register/edit-row'
 import { NativeSelect } from '#/components/register/native-select'
-import { matchesSearch, runningBalances } from '#/lib/transactions'
+import { FLAGS, matchesSearch, runningBalances } from '#/lib/transactions'
+import type { Flag } from '#/lib/transactions'
 import { transferLabel } from '#/lib/transfers'
+import { approveTransactions } from '#/server/import'
 import {
   bulkUpdateTransactions,
   deleteTransactions,
+  setTransactionFlag,
   updateTransaction,
 } from '#/server/transactions'
 import type { AccountWithBalances } from '#/server/accounts-query'
@@ -43,27 +46,31 @@ interface RegisterData {
   inflowCategoryId: string | null
 }
 
-type ClearedFilter = 'all' | 'uncleared' | 'cleared'
+type ClearedFilter = 'all' | 'uncleared' | 'cleared' | 'unapproved'
 
 export function Register({
   budget,
   accounts,
   data,
   accountId,
+  initialQuery = '',
 }: {
   budget: { id: string; currency: string; dateFormat: string; role: string }
   accounts: Array<AccountWithBalances>
   data: RegisterData
   /** Set for a single-account register; omit for the all-accounts view. */
   accountId?: string
+  /** Pre-fills the search box (from a global search result). */
+  initialQuery?: string
 }) {
   const router = useRouter()
   const canEdit = budget.role !== 'viewer'
   const singleAccount = accountId !== undefined
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [clearedFilter, setClearedFilter] = useState<ClearedFilter>('all')
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [flagFilter, setFlagFilter] = useState<'all' | 'any' | Flag>('all')
   const [confirmEditId, setConfirmEditId] = useState<string | null>(null)
   const [editingReconciled, setEditingReconciled] = useState(false)
   const [busy, startTransition] = useTransition()
@@ -106,9 +113,15 @@ export function Register({
         .filter(
           (t) =>
             (clearedFilter === 'all' ||
-              (clearedFilter === 'cleared'
-                ? t.cleared !== 'uncleared'
-                : t.cleared === 'uncleared')) &&
+              (clearedFilter === 'unapproved'
+                ? !t.approved
+                : clearedFilter === 'cleared'
+                  ? t.cleared !== 'uncleared'
+                  : t.cleared === 'uncleared')) &&
+            (flagFilter === 'all' ||
+              (flagFilter === 'any'
+                ? t.flag !== null
+                : t.flag === flagFilter)) &&
             matchesSearch(query, [
               t.payeeName,
               t.memo,
@@ -116,7 +129,7 @@ export function Register({
               t.accountName,
             ]),
         ),
-    [data.transactions, query, clearedFilter],
+    [data.transactions, query, clearedFilter, flagFilter],
   )
 
   const columns = useMemo(
@@ -146,6 +159,22 @@ export function Register({
     balances,
     splitCounts,
     onEdit: requestEdit,
+    onFlag: (t, flag) =>
+      mutate(
+        () =>
+          setTransactionFlag({
+            data: { budgetId: budget.id, transactionIds: [t.id], flag },
+          }),
+        flag ? `Flagged ${flag}` : 'Flag removed',
+      ),
+    onApprove: (t) =>
+      mutate(
+        () =>
+          approveTransactions({
+            data: { budgetId: budget.id, transactionIds: [t.id] },
+          }),
+        'Approved',
+      ),
     onToggleCleared: (t) =>
       mutate(
         () =>
@@ -235,6 +264,24 @@ export function Register({
           <option value="all">All</option>
           <option value="uncleared">Uncleared</option>
           <option value="cleared">Cleared</option>
+          <option value="unapproved">Needs approval</option>
+        </NativeSelect>
+        <NativeSelect
+          aria-label="Filter by flag"
+          className="w-36"
+          value={flagFilter}
+          onChange={(e) =>
+            setFlagFilter(e.target.value as 'all' | 'any' | Flag)
+          }
+        >
+          <option value="all">All flags</option>
+          <option value="any">Any flag</option>
+          {FLAGS.map((f) => (
+            <option key={f} value={f}>
+              {f[0]?.toUpperCase()}
+              {f.slice(1)} flag
+            </option>
+          ))}
         </NativeSelect>
         {canEdit ? (
           <Button className="ml-auto" onClick={() => setEditingId('new')}>
@@ -250,6 +297,28 @@ export function Register({
           inflowCategoryId={data.inflowCategoryId}
           busy={busy}
           onClear={() => setRowSelection({})}
+          onFlag={(flag) =>
+            mutate(
+              () =>
+                setTransactionFlag({
+                  data: {
+                    budgetId: budget.id,
+                    transactionIds: selectedIds,
+                    flag,
+                  },
+                }),
+              'Flags updated',
+            )
+          }
+          onApprove={() =>
+            mutate(
+              () =>
+                approveTransactions({
+                  data: { budgetId: budget.id, transactionIds: selectedIds },
+                }),
+              'Approved',
+            )
+          }
           onCategorize={(categoryId) =>
             mutate(
               () =>
@@ -333,8 +402,9 @@ export function Register({
                   <tr
                     tabIndex={0}
                     data-state={row.getIsSelected() ? 'selected' : undefined}
+                    data-approved={row.original.approved}
                     onKeyDown={(e) => moveFocus(e, row.original)}
-                    className="data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                    className="data-[approved=false]:border-l-primary data-[approved=false]:border-l-4 data-[approved=false]:font-semibold data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-2 py-1.5">
