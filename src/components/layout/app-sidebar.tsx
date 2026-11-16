@@ -19,7 +19,6 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from '#/components/ui/sidebar'
-import { BudgetSwitcher } from '#/components/layout/budget-switcher'
 import { SidebarAccounts } from '#/components/layout/sidebar-accounts'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
@@ -56,22 +55,19 @@ const NAV = [
 
 export function AppSidebar({
   budget,
-  budgets,
   accounts,
 }: {
   budget: BudgetSummary
-  budgets: Array<BudgetSummary>
   accounts: Array<AccountWithBalances>
 }) {
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="flex-row items-center group-data-[collapsible=icon]:flex-col-reverse">
-        <SidebarMenu className="min-w-0 flex-1">
-          <SidebarMenuItem>
-            <BudgetSwitcher current={budget} budgets={budgets} />
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <SidebarTrigger aria-label="Toggle sidebar" className="shrink-0" />
+    <Sidebar
+      variant="floating"
+      collapsible="icon"
+      className="top-(--header-height) h-[calc(100svh-var(--header-height))]"
+    >
+      <SidebarHeader className="flex-row items-center justify-end group-data-[collapsible=icon]:justify-center">
+        <SidebarTrigger aria-label="Toggle sidebar" />
       </SidebarHeader>
 
       <SidebarContent>

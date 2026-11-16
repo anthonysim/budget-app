@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
-import { SidebarMenuButton } from '#/components/ui/sidebar'
+import { Button } from '#/components/ui/button'
 import { DeleteBudgetDialog } from '#/components/budgets/delete-budget-dialog'
 import { RenameBudgetDialog } from '#/components/budgets/rename-budget-dialog'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
@@ -36,11 +36,11 @@ export function BudgetSwitcher({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton size="lg" tooltip={current.name}>
+          <Button variant="ghost" size="sm" className="max-w-64 gap-2">
             <PiggyBankIcon />
             <span className="truncate font-semibold">{current.name}</span>
-            <ChevronsUpDownIcon className="ml-auto" />
-          </SidebarMenuButton>
+            <ChevronsUpDownIcon className="text-muted-foreground" />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-60">
           <DropdownMenuLabel>Budgets</DropdownMenuLabel>

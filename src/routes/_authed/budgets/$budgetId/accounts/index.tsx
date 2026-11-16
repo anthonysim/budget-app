@@ -117,18 +117,21 @@ function AccountGroup({
         <Money value={total} currency={currency} className="font-medium" />
       </div>
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead className="bg-balance-working/50 text-muted-foreground text-left">
             <tr>
               <th className="px-3 py-2 font-medium">Account</th>
-              <th className="bg-balance-cleared text-balance-cleared-foreground px-3 py-2 text-right font-medium">
+              <th className="bg-balance-cleared text-balance-cleared-foreground w-36 px-3 py-2 text-right font-medium">
                 Cleared
               </th>
-              <th className="px-3 py-2 text-right font-medium">Uncleared</th>
-              <th className="bg-balance-working px-3 py-2 text-right font-medium">
+              <th className="w-36 px-3 py-2 text-right font-medium">
+                Uncleared
+              </th>
+              <th className="bg-balance-working w-36 px-3 py-2 text-right font-medium">
                 Working
               </th>
-              {canReorder ? <th className="w-20 px-3 py-2" /> : null}
+              {/* Always rendered so every group table shares the same column widths. */}
+              <th className="w-24 px-3 py-2" />
             </tr>
           </thead>
           <tbody>
@@ -182,7 +185,9 @@ function AccountGroup({
                       </Button>
                     </div>
                   </td>
-                ) : null}
+                ) : (
+                  <td className="px-3 py-2" />
+                )}
               </tr>
             ))}
           </tbody>

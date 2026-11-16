@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from '#/components/ui/sidebar'
+import { BudgetSwitcher } from '#/components/layout/budget-switcher'
 import { AppSidebar } from '#/components/layout/app-sidebar'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
 import type { AccountWithBalances } from '#/server/accounts-query'
@@ -29,12 +30,15 @@ export function AppShell({
   children: ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <AppSidebar budget={budget} budgets={budgets} accounts={accounts} />
-      <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          {/* Desktop toggle lives in the sidebar header; the sidebar is a sheet on mobile, so keep one here. */}
+    <SidebarProvider
+      className="bg-canvas h-svh flex-col overflow-hidden"
+      style={{ '--header-height': '3.5rem' } as CSSProperties}
+    >
+      <header className="bg-canvas flex h-(--header-height) shrink-0 items-center gap-2 px-4">
+        <div className="flex w-full items-center gap-2">
+          {/* Desktop toggle lives in the sidebar; the sidebar is a sheet on mobile, so keep one here. */}
           <SidebarTrigger aria-label="Open sidebar" className="md:hidden" />
+          <BudgetSwitcher current={budget} budgets={budgets} />
           <div className="ml-auto flex items-center gap-2">
             <SearchDialog
               budgetId={budget.id}
@@ -44,14 +48,19 @@ export function AppShell({
             <ThemeToggle />
             <UserMenu email={email} />
           </div>
-        </header>
-        {invites.length > 0 ? (
-          <div className="px-6 pt-4">
-            <InvitesBanner invites={invites} />
-          </div>
-        ) : null}
-        <div className="flex-1">{children}</div>
-      </SidebarInset>
+        </div>
+      </header>
+      <div className="flex min-h-0 flex-1">
+        <AppSidebar budget={budget} accounts={accounts} />
+        <SidebarInset className="bg-background m-2 min-h-0 min-w-0 overflow-y-auto overscroll-contain rounded-xl border md:ml-0">
+          {invites.length > 0 ? (
+            <div className="px-6 pt-4">
+              <InvitesBanner invites={invites} />
+            </div>
+          ) : null}
+          <div className="flex-1">{children}</div>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   )
 }

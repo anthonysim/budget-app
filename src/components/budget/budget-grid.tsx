@@ -181,63 +181,66 @@ export function BudgetGrid({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <MonthNav budgetId={budget.id} month={view.month} />
-        {canEdit ? (
-          <div className="flex gap-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <WandSparklesIcon /> Auto-assign <ChevronsUpDownIcon />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {(
-                  Object.keys(AUTO_ASSIGN_LABELS) as Array<AutoAssignAction>
-                ).map((action) => (
-                  <DropdownMenuItem
-                    key={action}
-                    onSelect={() => runAutoAssign(action)}
-                  >
-                    {AUTO_ASSIGN_LABELS[action]}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!history.canUndo}
-              onClick={history.undo}
-              aria-label="Undo"
-            >
-              <Undo2Icon /> Undo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!history.canRedo}
-              onClick={history.redo}
-              aria-label="Redo"
-            >
-              <Redo2Icon /> Redo
-            </Button>
-          </div>
-        ) : null}
+      {/* Pinned to the top of the scrolling main tile; negative margins cancel the page padding. */}
+      <div className="bg-background sticky top-0 z-10 -mx-6 -mt-6 flex flex-col gap-4 px-6 pt-6 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <MonthNav budgetId={budget.id} month={view.month} />
+          {canEdit ? (
+            <div className="flex gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <WandSparklesIcon /> Auto-assign <ChevronsUpDownIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {(
+                    Object.keys(AUTO_ASSIGN_LABELS) as Array<AutoAssignAction>
+                  ).map((action) => (
+                    <DropdownMenuItem
+                      key={action}
+                      onSelect={() => runAutoAssign(action)}
+                    >
+                      {AUTO_ASSIGN_LABELS[action]}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!history.canUndo}
+                onClick={history.undo}
+                aria-label="Undo"
+              >
+                <Undo2Icon /> Undo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!history.canRedo}
+                onClick={history.redo}
+                aria-label="Redo"
+              >
+                <Redo2Icon /> Redo
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        <MonthNote
+          budgetId={budget.id}
+          month={view.month}
+          note={view.monthNote}
+          canEdit={canEdit}
+        />
+
+        <RtaBanner
+          readyToAssign={view.readyToAssign}
+          currency={budget.currency}
+          overspentCount={overspentCount}
+        />
       </div>
-
-      <MonthNote
-        budgetId={budget.id}
-        month={view.month}
-        note={view.monthNote}
-        canEdit={canEdit}
-      />
-
-      <RtaBanner
-        readyToAssign={view.readyToAssign}
-        currency={budget.currency}
-        overspentCount={overspentCount}
-      />
 
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
