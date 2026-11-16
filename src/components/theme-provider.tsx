@@ -50,7 +50,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-    applyTheme(next)
+    // Cross-fade the whole page via the View Transitions API; fall back to an instant swap.
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion || !document.startViewTransition) {
+      applyTheme(next)
+      return
+    }
+    document.startViewTransition(() => applyTheme(next))
   }, [])
 
   const value = useMemo(() => ({ theme, setTheme }), [theme, setTheme])
