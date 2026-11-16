@@ -207,3 +207,9 @@
   --viz-good: var(--positive);
   --viz-critical: var(--chart-critical);
 }
+
+/* Theme switch cross-fade (see ThemeProvider.setTheme) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+}
