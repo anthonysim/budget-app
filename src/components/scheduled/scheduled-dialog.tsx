@@ -15,6 +15,7 @@ import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
+import { NewCategoryInline } from '#/components/scheduled/new-category-inline'
 import { todayString } from '#/lib/date'
 import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
 import { FREQUENCIES, FREQUENCY_LABELS } from '#/lib/schedule'
@@ -99,6 +100,9 @@ function ScheduledForm({
   const [memo, setMemo] = useState(scheduled?.memo ?? '')
   const [outflow, setOutflow] = useState(moneyField(initialSplit.outflow))
   const [inflow, setInflow] = useState(moneyField(initialSplit.inflow))
+
+  const [addingCategory, setAddingCategory] = useState(false)
+  const addableGroups = categoryGroups.filter((g) => !g.hidden)
 
   const account = accounts.find((a) => a.id === accountId)
   const transferId = parseTransferPayee(payeeName, accounts)
@@ -251,7 +255,20 @@ function ScheduledForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="sched-category">Category</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="sched-category">Category</Label>
+          {categoryApplies && !addingCategory && addableGroups.length > 0 ? (
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto p-0"
+              onClick={() => setAddingCategory(true)}
+            >
+              + New category
+            </Button>
+          ) : null}
+        </div>
         <NativeSelect
           id="sched-category"
           disabled={!categoryApplies}
@@ -271,6 +288,18 @@ function ScheduledForm({
             }
           />
         </NativeSelect>
+        {addingCategory && categoryApplies ? (
+          <NewCategoryInline
+            budgetId={budgetId}
+            groups={addableGroups}
+            onCancel={() => setAddingCategory(false)}
+            onCreated={async (id) => {
+              await router.invalidate()
+              setCategoryId(id)
+              setAddingCategory(false)
+            }}
+          />
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
