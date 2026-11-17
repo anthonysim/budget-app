@@ -17,7 +17,7 @@ export function RtaBanner({
       role="status"
       aria-label="Ready to Assign"
       className={cn(
-        'flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3',
+        'flex h-9 w-fit items-center gap-2 rounded-lg border px-3 text-sm',
         state === 'positive' &&
           'border-positive/30 bg-positive-soft text-positive-foreground',
         state === 'negative' &&
@@ -25,27 +25,23 @@ export function RtaBanner({
         state === 'zero' && 'bg-muted',
       )}
     >
-      <div>
-        <div className="text-2xl font-semibold tabular-nums">
-          <Money
-            value={readyToAssign}
-            currency={currency}
-            className="text-inherit"
-          />
-        </div>
-        <div className="text-sm">
-          {state === 'positive'
-            ? 'Ready to Assign'
-            : state === 'negative'
-              ? 'Overassigned: you assigned more than you have'
-              : 'All money assigned'}
-        </div>
-      </div>
+      <Money
+        value={readyToAssign}
+        currency={currency}
+        className="font-semibold text-inherit tabular-nums"
+      />
+      <span aria-hidden>·</span>
+      <span>
+        {state === 'positive'
+          ? 'Ready to Assign'
+          : state === 'negative'
+            ? 'Overassigned'
+            : 'All money assigned'}
+      </span>
       {overspentCount > 0 ? (
-        <div className="text-sm font-medium text-negative-foreground">
-          {overspentCount} categor{overspentCount === 1 ? 'y is' : 'ies are'}{' '}
-          overspent
-        </div>
+        <span className="text-negative-foreground border-l pl-2 font-medium">
+          {overspentCount} overspent
+        </span>
       ) : null}
     </div>
   )
