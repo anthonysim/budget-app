@@ -1,4 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useRouterState } from '@tanstack/react-router'
+import { cn } from '#/lib/utils'
 import {
   SidebarInset,
   SidebarProvider,
@@ -29,6 +31,10 @@ export function AppShell({
   invites: Array<MyInvite>
   children: ReactNode
 }) {
+  // The budget page lays out its own tiles (pinned header + scrolling table), so the main area is not a scroller there.
+  const ownTiles = useRouterState({
+    select: (s) => /\/budget\/?$/.test(s.location.pathname),
+  })
   return (
     <SidebarProvider
       className="bg-canvas h-svh flex-col overflow-hidden"
@@ -52,13 +58,20 @@ export function AppShell({
       </header>
       <div className="flex min-h-0 flex-1">
         <AppSidebar budget={budget} accounts={accounts} />
-        <SidebarInset className="bg-background m-2 min-h-0 min-w-0 overflow-y-auto overscroll-contain rounded-xl border md:ml-0">
+        <SidebarInset
+          className={cn(
+            'm-2 min-h-0 min-w-0 md:ml-0',
+            ownTiles
+              ? 'gap-2 bg-transparent'
+              : 'bg-background overflow-y-auto overscroll-contain rounded-xl border',
+          )}
+        >
           {invites.length > 0 ? (
             <div className="px-6 pt-4">
               <InvitesBanner invites={invites} />
             </div>
           ) : null}
-          <div className="flex-1">{children}</div>
+          <div className={cn('flex-1', ownTiles && 'min-h-0')}>{children}</div>
         </SidebarInset>
       </div>
     </SidebarProvider>

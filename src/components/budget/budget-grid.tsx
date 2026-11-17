@@ -180,9 +180,9 @@ export function BudgetGrid({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Pinned to the top of the scrolling main tile; negative margins cancel the page padding. */}
-      <div className="bg-background sticky top-0 z-10 -mx-6 -mt-6 flex flex-col gap-4 px-6 pt-6 pb-2">
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {/* Pinned header tile; the table tile below scrolls on its own. */}
+      <div className="bg-background flex shrink-0 flex-col gap-3 rounded-xl border p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <MonthNav budgetId={budget.id} month={view.month} />
           {canEdit ? (
@@ -242,9 +242,9 @@ export function BudgetGrid({
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="bg-background min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground text-left">
+          <thead className="bg-muted text-muted-foreground sticky top-0 z-10 text-left">
             <tr>
               <th className="px-3 py-2 font-medium">Category</th>
               <th className="px-3 py-2 text-right font-medium">Assigned</th>

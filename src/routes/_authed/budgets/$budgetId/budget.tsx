@@ -24,7 +24,7 @@ function BudgetPage() {
   const view = Route.useLoaderData()
   const { budget } = layout.useLoaderData()
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 p-6">
+    <div className="flex h-full min-h-0 flex-col">
       <h1 className="sr-only">Budget</h1>
       <BudgetGrid budget={budget} view={view} />
     </div>
