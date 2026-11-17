@@ -183,15 +183,13 @@ export function BudgetGrid({
     <div className="flex h-full min-h-0 flex-col gap-3">
       {/* Pinned header tile; the table tile below scrolls on its own. */}
       <div className="bg-background flex shrink-0 flex-col gap-3 rounded-xl border p-4">
-        <div className="flex flex-wrap items-start gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <MonthNav budgetId={budget.id} month={view.month} />
-          <div className="min-w-48 max-w-64 flex-1">
-            <RtaBanner
-              readyToAssign={view.readyToAssign}
-              currency={budget.currency}
-              overspentCount={overspentCount}
-            />
-          </div>
+          <RtaBanner
+            readyToAssign={view.readyToAssign}
+            currency={budget.currency}
+            overspentCount={overspentCount}
+          />
           {canEdit ? (
             <div className="ml-auto flex gap-1">
               <DropdownMenu>
@@ -235,7 +233,7 @@ export function BudgetGrid({
           ) : null}
         </div>
 
-        <div className="-mt-4">
+        <div className="-mt-1">
           <MonthNote
             budgetId={budget.id}
             month={view.month}
