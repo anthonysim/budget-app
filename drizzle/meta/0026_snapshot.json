@@ -80,12 +80,8 @@
           "name": "budget_members_budget_id_budgets_id_fk",
           "tableFrom": "budget_members",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -93,10 +89,7 @@
       "compositePrimaryKeys": {
         "budget_members_budget_id_user_id_pk": {
           "name": "budget_members_budget_id_user_id_pk",
-          "columns": [
-            "budget_id",
-            "user_id"
-          ]
+          "columns": ["budget_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -263,12 +256,8 @@
           "name": "accounts_budget_id_budgets_id_fk",
           "tableFrom": "accounts",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -278,10 +267,7 @@
         "accounts_budget_id_id_unique": {
           "name": "accounts_budget_id_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "budget_id",
-            "id"
-          ]
+          "columns": ["budget_id", "id"]
         }
       },
       "policies": {},
@@ -331,12 +317,8 @@
           "name": "payees_budget_id_budgets_id_fk",
           "tableFrom": "payees",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -346,10 +328,7 @@
         "payees_budget_id_id_unique": {
           "name": "payees_budget_id_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "budget_id",
-            "id"
-          ]
+          "columns": ["budget_id", "id"]
         }
       },
       "policies": {},
@@ -411,14 +390,8 @@
           "name": "subtransactions_transaction_budget_fk",
           "tableFrom": "subtransactions",
           "tableTo": "transactions",
-          "columnsFrom": [
-            "budget_id",
-            "transaction_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "transaction_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -536,14 +509,8 @@
           "name": "transactions_account_budget_fk",
           "tableFrom": "transactions",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "budget_id",
-            "account_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "account_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -553,10 +520,7 @@
         "transactions_budget_id_id_unique": {
           "name": "transactions_budget_id_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "budget_id",
-            "id"
-          ]
+          "columns": ["budget_id", "id"]
         }
       },
       "policies": {},
@@ -638,14 +602,8 @@
           "name": "categories_group_budget_fk",
           "tableFrom": "categories",
           "tableTo": "category_groups",
-          "columnsFrom": [
-            "budget_id",
-            "group_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "group_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -655,10 +613,7 @@
         "categories_budget_id_id_unique": {
           "name": "categories_budget_id_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "budget_id",
-            "id"
-          ]
+          "columns": ["budget_id", "id"]
         }
       },
       "policies": {},
@@ -729,12 +684,8 @@
           "name": "category_groups_budget_id_budgets_id_fk",
           "tableFrom": "category_groups",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -744,10 +695,7 @@
         "category_groups_budget_id_id_unique": {
           "name": "category_groups_budget_id_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "budget_id",
-            "id"
-          ]
+          "columns": ["budget_id", "id"]
         }
       },
       "policies": {},
@@ -797,14 +745,8 @@
           "name": "month_assignments_category_budget_fk",
           "tableFrom": "month_assignments",
           "tableTo": "categories",
-          "columnsFrom": [
-            "budget_id",
-            "category_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "category_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -812,10 +754,7 @@
       "compositePrimaryKeys": {
         "month_assignments_category_id_month_pk": {
           "name": "month_assignments_category_id_month_pk",
-          "columns": [
-            "category_id",
-            "month"
-          ]
+          "columns": ["category_id", "month"]
         }
       },
       "uniqueConstraints": {},
@@ -915,14 +854,8 @@
           "name": "scheduled_account_budget_fk",
           "tableFrom": "scheduled_transactions",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "budget_id",
-            "account_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "account_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1003,14 +936,8 @@
           "name": "category_targets_category_budget_fk",
           "tableFrom": "category_targets",
           "tableTo": "categories",
-          "columnsFrom": [
-            "budget_id",
-            "category_id"
-          ],
-          "columnsTo": [
-            "budget_id",
-            "id"
-          ],
+          "columnsFrom": ["budget_id", "category_id"],
+          "columnsTo": ["budget_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1020,9 +947,7 @@
         "category_targets_category_unique": {
           "name": "category_targets_category_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "category_id"
-          ]
+          "columns": ["category_id"]
         }
       },
       "policies": {},
@@ -1092,12 +1017,8 @@
           "name": "payee_rules_budget_id_budgets_id_fk",
           "tableFrom": "payee_rules",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1144,12 +1065,8 @@
           "name": "month_notes_budget_id_budgets_id_fk",
           "tableFrom": "month_notes",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1157,10 +1074,7 @@
       "compositePrimaryKeys": {
         "month_notes_budget_id_month_pk": {
           "name": "month_notes_budget_id_month_pk",
-          "columns": [
-            "budget_id",
-            "month"
-          ]
+          "columns": ["budget_id", "month"]
         }
       },
       "uniqueConstraints": {},
@@ -1218,12 +1132,8 @@
           "name": "budget_invites_budget_id_budgets_id_fk",
           "tableFrom": "budget_invites",
           "tableTo": "budgets",
-          "columnsFrom": [
-            "budget_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["budget_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1239,11 +1149,7 @@
     "public.budget_role": {
       "name": "budget_role",
       "schema": "public",
-      "values": [
-        "owner",
-        "editor",
-        "viewer"
-      ]
+      "values": ["owner", "editor", "viewer"]
     },
     "public.account_type": {
       "name": "account_type",
@@ -1263,23 +1169,12 @@
     "public.cleared_status": {
       "name": "cleared_status",
       "schema": "public",
-      "values": [
-        "uncleared",
-        "cleared",
-        "reconciled"
-      ]
+      "values": ["uncleared", "cleared", "reconciled"]
     },
     "public.transaction_flag": {
       "name": "transaction_flag",
       "schema": "public",
-      "values": [
-        "red",
-        "orange",
-        "yellow",
-        "green",
-        "blue",
-        "purple"
-      ]
+      "values": ["red", "orange", "yellow", "green", "blue", "purple"]
     },
     "public.schedule_frequency": {
       "name": "schedule_frequency",
@@ -1301,38 +1196,22 @@
     "public.target_behavior": {
       "name": "target_behavior",
       "schema": "public",
-      "values": [
-        "set_aside",
-        "refill"
-      ]
+      "values": ["set_aside", "refill"]
     },
     "public.target_repeat": {
       "name": "target_repeat",
       "schema": "public",
-      "values": [
-        "weekly",
-        "monthly",
-        "yearly",
-        "once"
-      ]
+      "values": ["weekly", "monthly", "yearly", "once"]
     },
     "public.target_type": {
       "name": "target_type",
       "schema": "public",
-      "values": [
-        "needed_for_spending",
-        "have_balance",
-        "monthly_funding"
-      ]
+      "values": ["needed_for_spending", "have_balance", "monthly_funding"]
     },
     "public.rule_match_type": {
       "name": "rule_match_type",
       "schema": "public",
-      "values": [
-        "contains",
-        "starts_with",
-        "equals"
-      ]
+      "values": ["contains", "starts_with", "equals"]
     }
   },
   "schemas": {},
