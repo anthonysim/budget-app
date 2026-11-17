@@ -183,10 +183,17 @@ export function BudgetGrid({
     <div className="flex h-full min-h-0 flex-col gap-3">
       {/* Pinned header tile; the table tile below scrolls on its own. */}
       <div className="bg-background flex shrink-0 flex-col gap-3 rounded-xl border p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-start gap-3">
           <MonthNav budgetId={budget.id} month={view.month} />
+          <div className="min-w-48 max-w-64 flex-1">
+            <RtaBanner
+              readyToAssign={view.readyToAssign}
+              currency={budget.currency}
+              overspentCount={overspentCount}
+            />
+          </div>
           {canEdit ? (
-            <div className="flex gap-1">
+            <div className="ml-auto flex gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -228,18 +235,14 @@ export function BudgetGrid({
           ) : null}
         </div>
 
-        <MonthNote
-          budgetId={budget.id}
-          month={view.month}
-          note={view.monthNote}
-          canEdit={canEdit}
-        />
-
-        <RtaBanner
-          readyToAssign={view.readyToAssign}
-          currency={budget.currency}
-          overspentCount={overspentCount}
-        />
+        <div className="-mt-4">
+          <MonthNote
+            budgetId={budget.id}
+            month={view.month}
+            note={view.monthNote}
+            canEdit={canEdit}
+          />
+        </div>
       </div>
 
       <div className="bg-background min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
