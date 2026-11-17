@@ -183,6 +183,13 @@
       "when": 1794803665458,
       "tag": "0025_budget_invites_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794889470611,
+      "tag": "0026_mid_and_end_of_month",
+      "breakpoints": true
     }
   ]
 }
