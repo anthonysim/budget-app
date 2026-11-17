@@ -17,6 +17,7 @@ export const scheduleFrequency = pgEnum('schedule_frequency', [
   'weekly',
   'biweekly',
   'twice_monthly',
+  'mid_and_end_of_month',
   'monthly',
   'bimonthly',
   'quarterly',

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."schedule_frequency" ADD VALUE 'mid_and_end_of_month' BEFORE 'monthly';

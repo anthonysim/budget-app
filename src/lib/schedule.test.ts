@@ -42,6 +42,34 @@ describe('nextOccurrence', () => {
     expect(nextOccurrence('2026-02-28', 'twice_monthly', 31)).toBe('2026-03-16')
   })
 
+  it('15th and last day of month runs on the 15th and the month end', () => {
+    expect(nextOccurrence('2026-11-15', 'mid_and_end_of_month', 15)).toBe(
+      '2026-11-30',
+    )
+    expect(nextOccurrence('2026-11-30', 'mid_and_end_of_month', 30)).toBe(
+      '2026-12-15',
+    )
+    expect(nextOccurrence('2026-12-15', 'mid_and_end_of_month', 15)).toBe(
+      '2026-12-31',
+    )
+    expect(nextOccurrence('2027-02-15', 'mid_and_end_of_month', 15)).toBe(
+      '2027-02-28',
+    )
+    expect(nextOccurrence('2028-02-15', 'mid_and_end_of_month', 15)).toBe(
+      '2028-02-29',
+    )
+    expect(nextOccurrence('2027-02-28', 'mid_and_end_of_month', 28)).toBe(
+      '2027-03-15',
+    )
+    // started on another day: next date snaps to the 15th or the month end
+    expect(nextOccurrence('2026-11-03', 'mid_and_end_of_month', 3)).toBe(
+      '2026-11-15',
+    )
+    expect(nextOccurrence('2026-11-20', 'mid_and_end_of_month', 20)).toBe(
+      '2026-11-30',
+    )
+  })
+
   it('one-off has no next occurrence', () => {
     expect(nextOccurrence('2026-11-01', 'once', 1)).toBeNull()
   })

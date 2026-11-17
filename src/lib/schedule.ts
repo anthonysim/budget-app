@@ -7,6 +7,7 @@ export const FREQUENCIES = [
   'weekly',
   'biweekly',
   'twice_monthly',
+  'mid_and_end_of_month',
   'monthly',
   'bimonthly',
   'quarterly',
@@ -21,6 +22,7 @@ export const FREQUENCY_LABELS: Record<Frequency, string> = {
   weekly: 'Weekly',
   biweekly: 'Every other week',
   twice_monthly: 'Twice a month',
+  mid_and_end_of_month: '15th and last day of month',
   monthly: 'Monthly',
   bimonthly: 'Every 2 months',
   quarterly: 'Every 3 months',
@@ -108,6 +110,14 @@ export function nextOccurrence(
         1,
         twiceMonthlyDays(anchorDay)[0],
       )
+    }
+    case 'mid_and_end_of_month': {
+      // Always the 15th and the last day of the month, whatever day the schedule started on.
+      const { y, m, d } = parse(date)
+      const dim = daysInMonth(y, m)
+      if (d < 15) return format(y, m, 15)
+      if (d < dim) return format(y, m, dim)
+      return addMonthsAnchored(format(y, m, 1), 1, 15)
     }
     default:
       return addMonthsAnchored(date, MONTH_STEP[frequency] ?? 1, anchorDay)
