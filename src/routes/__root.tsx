@@ -21,11 +21,18 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Budget',
+        title: 'ganso',
       },
+      {
+        name: 'description',
+        content: 'ganso (간소): simple, zero-based budgeting.',
+      },
+      { property: 'og:site_name', content: 'ganso' },
+      { property: 'og:title', content: 'ganso' },
     ],
     scripts: [{ children: themeInitScript }],
     links: [
+      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
       {
         rel: 'stylesheet',
         href: appCss,
