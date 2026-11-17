@@ -128,7 +128,7 @@ export const createCategory = createServerFn({ method: 'POST' })
       )
       .limit(1)
     if (!group) throw new Error('Not found')
-    await db()
+    const [created] = await db()
       .insert(categories)
       .values({
         budgetId: data.budgetId,
@@ -136,6 +136,9 @@ export const createCategory = createServerFn({ method: 'POST' })
         name: data.name,
         sort: await nextCategorySort(data.groupId),
       })
+      .returning({ id: categories.id })
+    if (!created) throw new Error('Could not create category')
+    return { id: created.id }
   })
 
 export const updateCategory = createServerFn({ method: 'POST' })

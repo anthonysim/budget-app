@@ -7,6 +7,7 @@ import {
   WandSparklesIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  PlusIcon,
   Redo2Icon,
   StickyNoteIcon,
   Undo2Icon,
@@ -31,8 +32,17 @@ import type { AutoAssignAction } from '#/lib/auto-assign'
 import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
 import { RtaBanner } from '#/components/budget/rta-banner'
+import { NameDialog } from '#/components/categories/name-dialog'
 import { setAssignments } from '#/server/budget-month'
-import type { BudgetCategoryRow, BudgetMonthView } from '#/lib/budget-month'
+import { createCategory } from '#/server/categories'
+import type {
+  BudgetCategoryRow,
+  BudgetGroupRow,
+  BudgetMonthView,
+} from '#/lib/budget-month'
+
+// System-managed group; the server rejects new categories in it.
+const PAYMENT_GROUP_NAME = 'Credit Card Payments'
 
 export function BudgetGrid({
   budget,
@@ -47,6 +57,7 @@ export function BudgetGrid({
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [moveFrom, setMoveFrom] = useState<BudgetCategoryRow | null>(null)
   const [targetFor, setTargetFor] = useState<BudgetCategoryRow | null>(null)
+  const [addTo, setAddTo] = useState<BudgetGroupRow | null>(null)
   const [, startSave] = useTransition()
 
   const allCategories = view.groups.flatMap((g) => g.categories)
@@ -285,7 +296,18 @@ export function BudgetGrid({
                     <td className="px-3 py-2 text-right">
                       <Money value={g.available} currency={budget.currency} />
                     </td>
-                    <td />
+                    <td className="px-2 py-1">
+                      {canEdit && g.name !== PAYMENT_GROUP_NAME ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Add category to ${g.name}`}
+                          onClick={() => setAddTo(g)}
+                        >
+                          <PlusIcon />
+                        </Button>
+                      ) : null}
+                    </td>
                   </tr>
                   {isCollapsed
                     ? null
@@ -406,6 +428,26 @@ export function BudgetGrid({
               g.name === 'Credit Card Payments' &&
               g.categories.some((c) => c.id === targetFor.id),
           )}
+        />
+      ) : null}
+
+      {addTo ? (
+        <NameDialog
+          key={addTo.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setAddTo(null)
+          }}
+          title={`Add category to ${addTo.name}`}
+          label="Category name"
+          submitLabel="Add category"
+          onSubmit={async (name) => {
+            await createCategory({
+              data: { budgetId: budget.id, groupId: addTo.id, name },
+            })
+            await router.invalidate()
+            toast.success('Category added')
+          }}
         />
       ) : null}
 
