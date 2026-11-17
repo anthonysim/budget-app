@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     // Cross-fade the whole page via the View Transitions API; fall back to an instant swap.
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduceMotion || !document.startViewTransition) {
+    if (reduceMotion || !('startViewTransition' in document)) {
       applyTheme(next)
       return
     }

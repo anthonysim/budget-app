@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { useRouterState } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { cn } from '#/lib/utils'
+import { Wordmark } from '#/components/layout/wordmark'
 import {
   SidebarInset,
   SidebarProvider,
@@ -44,6 +45,15 @@ export function AppShell({
         <div className="flex w-full items-center gap-2">
           {/* Desktop toggle lives in the sidebar; the sidebar is a sheet on mobile, so keep one here. */}
           <SidebarTrigger aria-label="Open sidebar" className="md:hidden" />
+          <Link
+            to="/budget"
+            aria-label="ganso home"
+            title="간소 · simplicity"
+            className="mr-1 rounded-md px-1"
+          >
+            <Wordmark />
+          </Link>
+          <span aria-hidden className="bg-border h-5 w-px" />
           <BudgetSwitcher current={budget} budgets={budgets} />
           <div className="ml-auto flex items-center gap-2">
             <SearchDialog

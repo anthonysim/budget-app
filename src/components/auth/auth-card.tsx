@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
+import { Wordmark } from '#/components/layout/wordmark'
 
 export function AuthCard({
   title,
@@ -17,7 +18,8 @@ export function AuthCard({
   children: ReactNode
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
+      <Wordmark size="lg" className="text-4xl" />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
