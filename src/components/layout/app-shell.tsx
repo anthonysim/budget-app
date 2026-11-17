@@ -60,9 +60,9 @@ export function AppShell({
         <AppSidebar budget={budget} accounts={accounts} />
         <SidebarInset
           className={cn(
-            'm-2 min-h-0 min-w-0 md:ml-0',
+            'm-3 min-h-0 min-w-0 md:ml-0',
             ownTiles
-              ? 'gap-2 bg-transparent'
+              ? 'gap-3 bg-transparent'
               : 'bg-background overflow-y-auto overscroll-contain rounded-xl border',
           )}
         >
