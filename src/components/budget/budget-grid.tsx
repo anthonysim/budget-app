@@ -180,7 +180,7 @@ export function BudgetGrid({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       {/* Pinned header tile; the table tile below scrolls on its own. */}
       <div className="bg-background flex shrink-0 flex-col gap-3 rounded-xl border p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
