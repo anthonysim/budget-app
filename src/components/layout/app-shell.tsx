@@ -11,6 +11,7 @@ import { AppSidebar } from '#/components/layout/app-sidebar'
 import type { BudgetSummary } from '#/components/budgets/budget-types'
 import type { AccountWithBalances } from '#/server/accounts-query'
 import { SearchDialog } from '#/components/layout/search-dialog'
+import { ShortcutsDialog } from '#/components/layout/shortcuts-dialog'
 import { InvitesBanner } from '#/components/sharing/invites-banner'
 import type { MyInvite } from '#/lib/sharing'
 import { UserMenu } from '#/components/layout/user-menu'
@@ -72,6 +73,7 @@ export function AppShell({
           <div className="flex-1">{children}</div>
         </SidebarInset>
       </div>
+      <ShortcutsDialog />
     </SidebarProvider>
   )
 }
