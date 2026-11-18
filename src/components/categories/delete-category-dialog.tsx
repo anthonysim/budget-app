@@ -11,7 +11,18 @@ import {
 } from '#/components/ui/alert-dialog'
 import { Label } from '#/components/ui/label'
 import { NativeSelect } from '#/components/register/native-select'
-import type { CategoryGroupRow, CategoryRow } from '#/server/categories-query'
+
+interface DeletableCategory {
+  id: string
+  name: string
+  transactionCount: number
+}
+
+interface ReassignGroup {
+  id: string
+  name: string
+  categories: Array<{ id: string; name: string }>
+}
 
 /**
  * Delete confirmation. If the category has transactions, asks where to move them
@@ -26,8 +37,8 @@ export function DeleteCategoryDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  category: CategoryRow
-  groups: Array<CategoryGroupRow>
+  category: DeletableCategory
+  groups: Array<ReassignGroup>
   /** reassignTo: category id to move transactions to, or undefined to leave them uncategorized. */
   onConfirm: (reassignTo: string | undefined) => void
 }) {
