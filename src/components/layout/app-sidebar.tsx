@@ -50,6 +50,7 @@ const NAV = [
     to: '/budgets/$budgetId/accounts',
     label: 'All Accounts',
     icon: LandmarkIcon,
+    exact: true,
   },
 ] as const
 
@@ -74,13 +75,14 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map(({ to, label, icon: Icon }) => (
+              {NAV.map(({ to, label, icon: Icon, ...rest }) => (
                 <SidebarMenuItem key={to}>
                   <SidebarMenuButton asChild tooltip={label}>
                     <Link
                       to={to}
                       params={{ budgetId: budget.id }}
                       activeProps={{ 'data-active': true }}
+                      activeOptions={{ exact: 'exact' in rest }}
                     >
                       <Icon />
                       <span>{label}</span>
