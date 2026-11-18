@@ -1,4 +1,4 @@
-import { Fragment, useOptimistic, useState, useTransition } from 'react'
+import { Fragment, useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   ChevronsUpDownIcon,
@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { AUTO_ASSIGN_LABELS, autoAssignChanges } from '#/lib/auto-assign'
+import { applyCategoryOrder } from '#/lib/category-order'
 import type { AutoAssignAction } from '#/lib/auto-assign'
 import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
@@ -76,7 +77,10 @@ export function BudgetGrid({
   const [renaming, setRenaming] = useState<BudgetCategoryRow | null>(null)
   const [deleting, setDeleting] = useState<BudgetCategoryRow | null>(null)
   const [, startSave] = useTransition()
-  const [groups, setOptimisticGroups] = useOptimistic(view.groups)
+  // Reordering only changes `sort`, so keep the new order locally instead of
+  // reloading every route (which re-renders the whole page and resets scroll).
+  const [order, setOrder] = useState<Record<string, Array<string>>>({})
+  const groups = applyCategoryOrder(view.groups, order)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -191,23 +195,21 @@ export function BudgetGrid({
     const from = group.categories.findIndex((c) => c.id === active.id)
     const to = group.categories.findIndex((c) => c.id === over.id)
     if (from === -1 || to === -1) return
-    const categories = arrayMove(group.categories, from, to)
+    const categoryIds = arrayMove(group.categories, from, to).map((c) => c.id)
+    setOrder((prev) => ({ ...prev, [group.id]: categoryIds }))
     startSave(async () => {
-      setOptimisticGroups(
-        groups.map((g) => (g.id === group.id ? { ...g, categories } : g)),
-      )
       try {
         await reorderCategories({
-          data: {
-            budgetId: budget.id,
-            groupId: group.id,
-            categoryIds: categories.map((c) => c.id),
-          },
+          data: { budgetId: budget.id, groupId: group.id, categoryIds },
         })
       } catch {
         toast.error('Could not reorder categories')
+        setOrder((prev) => {
+          const { [group.id]: _discarded, ...rest } = prev
+          return rest
+        })
+        await router.invalidate()
       }
-      await router.invalidate()
     })
   }
 
