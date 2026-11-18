@@ -4,7 +4,6 @@ import {
   CheckIcon,
   ChevronsUpDownIcon,
   PencilIcon,
-  PiggyBankIcon,
   PlusIcon,
   Trash2Icon,
 } from 'lucide-react'
@@ -37,7 +36,6 @@ export function BudgetSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="max-w-64 gap-2">
-            <PiggyBankIcon />
             <span className="truncate font-semibold">{current.name}</span>
             <ChevronsUpDownIcon className="text-muted-foreground" />
           </Button>
