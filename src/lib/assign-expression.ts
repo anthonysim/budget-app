@@ -6,6 +6,7 @@
  *   "*2" "/2"    -> current * 2 / current / 2
  *   "100+25.5"   -> 125.50      (+ - * / and parentheses)
  *   "$1,200"     -> 1200.00
+ *   "" (cleared) -> 0.00
  *
  * Returns milliunits (rounded), or null if the input is not valid.
  * No eval(): a small recursive-descent parser.
@@ -15,7 +16,7 @@ export function evalAssignedInput(
   currentMilli: number,
 ): number | null {
   const text = input.replace(/[$,\s]/g, '')
-  if (text === '') return null
+  if (text === '') return 0
 
   const first = text[0]
   const relative =
