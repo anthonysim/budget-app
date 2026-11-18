@@ -263,7 +263,7 @@ export function EditRow({
     }
   }
 
-  const cell = 'px-2 py-1.5 align-top'
+  const cell = 'px-2 py-1.5 align-middle'
   return (
     <>
       <tr className="bg-muted/40 border-t" onKeyDown={onKeyDown}>
@@ -289,7 +289,7 @@ export function EditRow({
           <Input
             aria-label="Date"
             type="date"
-            className="h-8"
+            className="h-8 w-[7.5rem] px-2"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
@@ -341,7 +341,7 @@ export function EditRow({
         <td className={cell}>
           <Input
             aria-label="Outflow"
-            className="h-8 text-right"
+            className="h-8 w-24 px-2 text-right"
             inputMode="decimal"
             placeholder="0.00"
             autoComplete="off"
@@ -352,7 +352,7 @@ export function EditRow({
         <td className={cell}>
           <Input
             aria-label="Inflow"
-            className="h-8 text-right"
+            className="h-8 w-24 px-2 text-right"
             inputMode="decimal"
             placeholder="0.00"
             autoComplete="off"
@@ -432,7 +432,7 @@ export function EditRow({
               <td className={cell}>
                 <Input
                   aria-label={`Split ${i + 1} outflow`}
-                  className="h-8 text-right"
+                  className="h-8 w-24 px-2 text-right"
                   inputMode="decimal"
                   placeholder="0.00"
                   autoComplete="off"
@@ -445,7 +445,7 @@ export function EditRow({
               <td className={cell}>
                 <Input
                   aria-label={`Split ${i + 1} inflow`}
-                  className="h-8 text-right"
+                  className="h-8 w-24 px-2 text-right"
                   inputMode="decimal"
                   placeholder="0.00"
                   autoComplete="off"
@@ -477,11 +477,18 @@ export function EditRow({
         : null}
 
       <tr className="bg-muted/40" onKeyDown={onKeyDown}>
-        <td colSpan={12} className="px-3 pb-2 text-sm">
+        <td />
+        {showAccountColumn ? <td /> : null}
+        <td colSpan={12} className="px-2 pt-0.5 pb-2 text-sm">
           <div className="flex flex-wrap items-center gap-3">
             {canSplit && !isSplit ? (
-              <Button size="sm" variant="outline" onClick={startSplit}>
-                <SplitIcon /> Split
+              <Button
+                size="xs"
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground -ml-2"
+                onClick={startSplit}
+              >
+                <SplitIcon /> Split transaction
               </Button>
             ) : null}
             {isSplit ? (
