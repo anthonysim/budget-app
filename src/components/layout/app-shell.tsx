@@ -73,7 +73,7 @@ export function AppShell({
             'm-3 min-h-0 min-w-0 md:ml-0',
             ownTiles
               ? 'gap-3 bg-transparent'
-              : 'bg-background overflow-y-auto overscroll-contain rounded-xl border',
+              : 'bg-background overflow-y-auto overscroll-contain rounded-xl border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
           )}
         >
           {invites.length > 0 ? (
