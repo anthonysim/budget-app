@@ -26,8 +26,12 @@ describe('evalAssignedInput', () => {
     expect(evalAssignedInput('100/3', cur)).toBe(33_333)
   })
 
+  it('treats cleared input as zero', () => {
+    expect(evalAssignedInput('', cur)).toBe(0)
+    expect(evalAssignedInput('  ', cur)).toBe(0)
+  })
+
   it('rejects invalid input', () => {
-    expect(evalAssignedInput('', cur)).toBeNull()
     expect(evalAssignedInput('abc', cur)).toBeNull()
     expect(evalAssignedInput('1+', cur)).toBeNull()
     expect(evalAssignedInput('1/0', cur)).toBeNull()
