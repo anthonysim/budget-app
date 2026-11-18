@@ -70,6 +70,8 @@ export interface BudgetCategoryRow {
   available: number
   overspent: 'cash' | 'credit' | null
   note: string | null
+  /** Transactions using this category (drives the delete/reassign prompt). */
+  transactionCount: number
   target: TargetView | null
   history: CategoryHistory
 }

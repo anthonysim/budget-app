@@ -1,6 +1,11 @@
 import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { Money } from '#/components/accounts/money'
 import { Button } from '#/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#/components/ui/tooltip'
 import type { BudgetGroupRow as GroupRow } from '#/lib/budget-month'
 
 /** Group header row: collapse toggle, group totals and an "add category" button. */
@@ -48,14 +53,19 @@ export function GroupHeaderRow({
       </td>
       <td className="px-2 py-1">
         {canAdd ? (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Add category to ${group.name}`}
-            onClick={() => onAdd(group)}
-          >
-            <PlusIcon />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Add category to ${group.name}`}
+                onClick={() => onAdd(group)}
+              >
+                <PlusIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add category</TooltipContent>
+          </Tooltip>
         ) : null}
       </td>
     </tr>

@@ -1,8 +1,19 @@
 import type { ReactNode } from 'react'
-import { ArrowLeftRightIcon, StickyNoteIcon, TargetIcon } from 'lucide-react'
+import {
+  ArrowLeftRightIcon,
+  PencilIcon,
+  StickyNoteIcon,
+  TargetIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { Money } from '#/components/accounts/money'
 import { Button } from '#/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#/components/ui/tooltip'
 import { AssignedCell } from '#/components/budget/assigned-cell'
 import { AvailablePill } from '#/components/budget/available-pill'
 import { TargetProgress } from '#/components/budget/target-progress'
@@ -21,6 +32,34 @@ function PlainRow({
   return <tr className={className}>{children}</tr>
 }
 
+function IconAction({
+  label,
+  tip,
+  onClick,
+  children,
+}: {
+  label: string
+  tip: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={label}
+          onClick={onClick}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{tip}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 /** One category row: name, assigned, activity, available and per-row actions. */
 export function CategoryLineRow({
   category: c,
@@ -30,6 +69,8 @@ export function CategoryLineRow({
   onCommitAssigned,
   onSetTarget,
   onMoveMoney,
+  onRename,
+  onDelete,
 }: {
   category: CategoryRow
   currency: string
@@ -39,6 +80,10 @@ export function CategoryLineRow({
   onCommitAssigned: (category: CategoryRow, next: number) => void
   onSetTarget: (category: CategoryRow) => void
   onMoveMoney: (category: CategoryRow) => void
+  /** Omitted for system categories, which cannot be renamed. */
+  onRename?: (category: CategoryRow) => void
+  /** Omitted for system categories, which cannot be deleted. */
+  onDelete?: (category: CategoryRow) => void
 }) {
   const Row = sortable ? SortableRow : PlainRow
   return (
@@ -51,7 +96,16 @@ export function CategoryLineRow({
         )}
       >
         <div className="flex items-center gap-1">
-          {sortable ? <DragHandle label={`Reorder ${c.name}`} /> : null}
+          {sortable ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <DragHandle label={`Reorder ${c.name}`} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Drag to reorder</TooltipContent>
+            </Tooltip>
+          ) : null}
           <div>
             {c.name}
             {c.note ? (
@@ -87,22 +141,38 @@ export function CategoryLineRow({
       <td className="px-2 py-1">
         {canEdit ? (
           <div className="flex gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Set target for ${c.name}`}
+            <IconAction
+              label={`Set target for ${c.name}`}
+              tip="Set target"
               onClick={() => onSetTarget(c)}
             >
               <TargetIcon />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Move money from ${c.name}`}
+            </IconAction>
+            <IconAction
+              label={`Move money from ${c.name}`}
+              tip="Move money"
               onClick={() => onMoveMoney(c)}
             >
               <ArrowLeftRightIcon />
-            </Button>
+            </IconAction>
+            {onRename ? (
+              <IconAction
+                label={`Rename ${c.name}`}
+                tip="Rename category"
+                onClick={() => onRename(c)}
+              >
+                <PencilIcon />
+              </IconAction>
+            ) : null}
+            {onDelete ? (
+              <IconAction
+                label={`Delete ${c.name}`}
+                tip="Delete category"
+                onClick={() => onDelete(c)}
+              >
+                <Trash2Icon />
+              </IconAction>
+            ) : null}
           </div>
         ) : null}
       </td>

@@ -212,6 +212,7 @@ export async function queryBudgetMonth(
         available: m?.available ?? 0,
         overspent: m?.overspent ?? null,
         note: c.note,
+        transactionCount: c.transactionCount,
         target: null,
         history: historyFor(c.id),
       }

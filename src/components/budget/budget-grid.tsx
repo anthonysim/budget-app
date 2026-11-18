@@ -41,9 +41,15 @@ import type { AutoAssignAction } from '#/lib/auto-assign'
 import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
 import { RtaBanner } from '#/components/budget/rta-banner'
+import { DeleteCategoryDialog } from '#/components/categories/delete-category-dialog'
 import { NameDialog } from '#/components/categories/name-dialog'
 import { setAssignments } from '#/server/budget-month'
-import { createCategory, reorderCategories } from '#/server/categories'
+import {
+  createCategory,
+  deleteCategory,
+  reorderCategories,
+  updateCategory,
+} from '#/server/categories'
 import type {
   BudgetCategoryRow,
   BudgetGroupRow,
@@ -67,6 +73,8 @@ export function BudgetGrid({
   const [moveFrom, setMoveFrom] = useState<BudgetCategoryRow | null>(null)
   const [targetFor, setTargetFor] = useState<BudgetCategoryRow | null>(null)
   const [addTo, setAddTo] = useState<BudgetGroupRow | null>(null)
+  const [renaming, setRenaming] = useState<BudgetCategoryRow | null>(null)
+  const [deleting, setDeleting] = useState<BudgetCategoryRow | null>(null)
   const [, startSave] = useTransition()
   const [groups, setOptimisticGroups] = useOptimistic(view.groups)
   const sensors = useSensors(
@@ -203,6 +211,26 @@ export function BudgetGrid({
     })
   }
 
+  async function confirmDelete(
+    category: BudgetCategoryRow,
+    reassignTo: string | undefined,
+  ) {
+    setDeleting(null)
+    try {
+      await deleteCategory({
+        data: {
+          budgetId: budget.id,
+          categoryId: category.id,
+          reassignToCategoryId: reassignTo,
+        },
+      })
+      toast.success(`Deleted ${category.name}`)
+    } catch {
+      toast.error('Could not delete the category')
+    }
+    await router.invalidate()
+  }
+
   function toggle(groupId: string) {
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -324,6 +352,8 @@ export function BudgetGrid({
                             onCommitAssigned={commitAssigned}
                             onSetTarget={setTargetFor}
                             onMoveMoney={setMoveFrom}
+                            onRename={sortable ? setRenaming : undefined}
+                            onDelete={sortable ? setDeleting : undefined}
                           />
                         ))}
                       </SortableContext>
@@ -392,6 +422,44 @@ export function BudgetGrid({
             await router.invalidate()
             toast.success('Category added')
           }}
+        />
+      ) : null}
+
+      {renaming ? (
+        <NameDialog
+          key={renaming.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setRenaming(null)
+          }}
+          title="Rename category"
+          label="Category name"
+          initialValue={renaming.name}
+          submitLabel="Save"
+          onSubmit={async (name) => {
+            await updateCategory({
+              data: {
+                budgetId: budget.id,
+                categoryId: renaming.id,
+                name,
+              },
+            })
+            await router.invalidate()
+            toast.success('Category renamed')
+          }}
+        />
+      ) : null}
+
+      {deleting ? (
+        <DeleteCategoryDialog
+          key={deleting.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setDeleting(null)
+          }}
+          category={deleting}
+          groups={view.groups.filter((g) => g.name !== PAYMENT_GROUP_NAME)}
+          onConfirm={(reassignTo) => confirmDelete(deleting, reassignTo)}
         />
       ) : null}
 
