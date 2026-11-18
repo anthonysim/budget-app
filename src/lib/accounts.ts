@@ -118,3 +118,24 @@ export const reconcileAccountSchema = z.object({
   /** Client's local 'YYYY-MM-DD' for the adjustment transaction. */
   adjustmentDate: dateSchema.optional(),
 })
+
+/**
+ * Drag-and-drop variant of moveWithinGroup: move `activeId` to where `overId` sits among
+ * `group` (a subset of `all`, in order). Other ids keep their slots. Returns the new full order.
+ */
+export function reorderWithinGroup(
+  all: Array<string>,
+  group: Array<string>,
+  activeId: string,
+  overId: string,
+): Array<string> {
+  const from = group.indexOf(activeId)
+  const to = group.indexOf(overId)
+  if (from === -1 || to === -1 || from === to) return all
+  const reordered = [...group]
+  reordered.splice(from, 1)
+  reordered.splice(to, 0, activeId)
+  const inGroup = new Set(group)
+  let next = 0
+  return all.map((id) => (inGroup.has(id) ? (reordered[next++] ?? id) : id))
+}
