@@ -7,6 +7,7 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import { Money } from '#/components/accounts/money'
+import { useHotkey } from '#/hooks/use-hotkey'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -77,16 +78,7 @@ export function SearchDialog({
   const [, startTransition] = useTransition()
   const requestId = useRef(0)
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setOpen((o) => !o)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  useHotkey('k', () => setOpen((o) => !o), { allowInInputs: true })
 
   // debounce typing, ignore results that arrive out of order
   useEffect(() => {

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useHotkey } from '#/hooks/use-hotkey'
 import {
   Dialog,
   DialogContent,
@@ -20,15 +21,7 @@ const SHORTCUTS: Array<{ keys: Array<string>; label: string }> = [
 export function ShortcutsDialog() {
   const [open, setOpen] = useState(false)
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== '/' || !(e.metaKey || e.ctrlKey) || e.altKey) return
-      e.preventDefault()
-      setOpen((o) => !o)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  useHotkey('/', () => setOpen((o) => !o), { allowInInputs: true })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
