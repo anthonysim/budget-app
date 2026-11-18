@@ -15,12 +15,24 @@ import {
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import { BulkBar } from '#/components/register/bulk-bar'
 import { buildColumns } from '#/components/register/columns'
 import type { RegisterMeta } from '#/components/register/columns'
 import { EditRow } from '#/components/register/edit-row'
 import { NativeSelect } from '#/components/register/native-select'
-import { FLAGS, matchesSearch, runningBalances } from '#/lib/transactions'
+import {
+  FLAGS,
+  FLAG_COLORS,
+  matchesSearch,
+  runningBalances,
+} from '#/lib/transactions'
 import type { Flag } from '#/lib/transactions'
 import { transferLabel } from '#/lib/transfers'
 import { approveTransactions } from '#/server/import'
@@ -272,23 +284,28 @@ export function Register({
           <option value="cleared">Cleared</option>
           <option value="unapproved">Needs approval</option>
         </NativeSelect>
-        <NativeSelect
-          aria-label="Filter by flag"
-          className="w-36"
+        <Select
           value={flagFilter}
-          onChange={(e) =>
-            setFlagFilter(e.target.value as 'all' | 'any' | Flag)
-          }
+          onValueChange={(v) => setFlagFilter(v as 'all' | 'any' | Flag)}
         >
-          <option value="all">All flags</option>
-          <option value="any">Any flag</option>
-          {FLAGS.map((f) => (
-            <option key={f} value={f}>
-              {f[0]?.toUpperCase()}
-              {f.slice(1)} flag
-            </option>
-          ))}
-        </NativeSelect>
+          <SelectTrigger aria-label="Filter by flag" size="sm" className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All flags</SelectItem>
+            <SelectItem value="any">Any flag</SelectItem>
+            {FLAGS.map((f) => (
+              <SelectItem key={f} value={f}>
+                <span
+                  aria-hidden
+                  className="inline-block size-2.5 rounded-full"
+                  style={{ background: FLAG_COLORS[f] }}
+                />
+                <span className="capitalize">{f} flag</span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {canEdit ? (
           <Button className="ml-auto" onClick={() => setEditingId('new')}>
             <PlusIcon /> Add transaction

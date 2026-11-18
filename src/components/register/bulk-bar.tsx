@@ -3,10 +3,19 @@ import { Trash2Icon } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { ConfirmDialog } from '#/components/categories/confirm-dialog'
 import { CategoryOptions } from '#/components/register/category-options'
-import { FLAGS } from '#/lib/transactions'
+import { FLAGS, FLAG_COLORS } from '#/lib/transactions'
 import type { Flag } from '#/lib/transactions'
 import { NativeSelect } from '#/components/register/native-select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import type { CategoryGroupRow } from '#/server/categories-query'
+
+const NO_FLAG = '__none__'
 
 export function BulkBar({
   count,
@@ -76,28 +85,28 @@ export function BulkBar({
       >
         Mark uncleared
       </Button>
-      <NativeSelect
-        aria-label="Flag selected"
-        className="w-36"
-        value="__none__"
+      <Select
+        value=""
         disabled={busy}
-        onChange={(e) => {
-          const v = e.target.value
-          if (v === '__none__') return
-          onFlag(v === '' ? null : (v as Flag))
-        }}
+        onValueChange={(v) => onFlag(v === NO_FLAG ? null : (v as Flag))}
       >
-        <option value="__none__" disabled>
-          Flag as…
-        </option>
-        <option value="">No flag</option>
-        {FLAGS.map((f) => (
-          <option key={f} value={f}>
-            {f[0]?.toUpperCase()}
-            {f.slice(1)}
-          </option>
-        ))}
-      </NativeSelect>
+        <SelectTrigger aria-label="Flag selected" size="sm" className="w-36">
+          <SelectValue placeholder="Flag as…" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_FLAG}>No flag</SelectItem>
+          {FLAGS.map((f) => (
+            <SelectItem key={f} value={f}>
+              <span
+                aria-hidden
+                className="inline-block size-2.5 rounded-full"
+                style={{ background: FLAG_COLORS[f] }}
+              />
+              <span className="capitalize">{f}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Button size="sm" variant="outline" disabled={busy} onClick={onApprove}>
         Approve
       </Button>
