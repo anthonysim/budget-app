@@ -6,7 +6,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import type { RowSelectionState } from '@tanstack/react-table'
-import { PlusIcon } from 'lucide-react'
+import {
+  CalendarClockIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -68,6 +73,7 @@ export function Register({
   const singleAccount = accountId !== undefined
   const [query, setQuery] = useState(initialQuery)
   const [clearedFilter, setClearedFilter] = useState<ClearedFilter>('all')
+  const [scheduledOpen, setScheduledOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [flagFilter, setFlagFilter] = useState<'all' | 'any' | Flag>('all')
@@ -383,11 +389,33 @@ export function Register({
           </thead>
           <tbody>
             {editingId === 'new' ? <EditRow {...editProps} /> : null}
-            <UpcomingRows
-              scheduled={data.scheduled}
-              accountId={accountId}
-              budget={budget}
-            />
+            {data.scheduled.length > 0 ? (
+              <tr className="bg-muted/50 border-t">
+                <td colSpan={columnCount} className="p-0">
+                  <button
+                    type="button"
+                    aria-expanded={scheduledOpen}
+                    onClick={() => setScheduledOpen((v) => !v)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left font-medium"
+                  >
+                    <CalendarClockIcon className="size-4" />
+                    Scheduled Transactions ({data.scheduled.length})
+                    {scheduledOpen ? (
+                      <ChevronDownIcon className="size-4" />
+                    ) : (
+                      <ChevronRightIcon className="size-4" />
+                    )}
+                  </button>
+                </td>
+              </tr>
+            ) : null}
+            {scheduledOpen ? (
+              <UpcomingRows
+                scheduled={data.scheduled}
+                accountId={accountId}
+                budget={budget}
+              />
+            ) : null}
             {table.getRowModel().rows.map((row) =>
               editingId === row.original.id ? (
                 <EditRow
