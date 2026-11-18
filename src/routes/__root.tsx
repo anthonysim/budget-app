@@ -21,14 +21,14 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'ganso',
+        title: 'ganso 간소',
       },
       {
         name: 'description',
         content: 'ganso (간소): simple, zero-based budgeting.',
       },
-      { property: 'og:site_name', content: 'ganso' },
-      { property: 'og:title', content: 'ganso' },
+      { property: 'og:site_name', content: 'ganso 간소' },
+      { property: 'og:title', content: 'ganso 간소' },
     ],
     scripts: [{ children: themeInitScript }],
     links: [

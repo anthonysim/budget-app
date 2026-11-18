@@ -12,7 +12,9 @@ function Home() {
         <Wordmark size="lg" />
       </h1>
       <p className="text-muted-foreground text-lg">Budgeting, simplified.</p>
-      <p className="text-muted-foreground -mt-2 text-sm">간소 · simplicity</p>
+      <p className="text-muted-foreground -mt-2 text-sm">
+        Korean for “simplicity”
+      </p>
       {user ? (
         <Button asChild>
           <Link to="/budget">Open budget</Link>
