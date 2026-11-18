@@ -431,6 +431,10 @@ export function Register({
                 scheduled={data.scheduled}
                 accountId={accountId}
                 budget={budget}
+                accounts={accounts}
+                payees={data.payees}
+                categoryGroups={data.categoryGroups}
+                inflowCategoryId={data.inflowCategoryId}
               />
             ) : null}
             {table.getRowModel().rows.map((row) =>
