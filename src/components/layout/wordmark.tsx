@@ -3,11 +3,11 @@ import { cn } from '#/lib/utils'
 /** The ganso wordmark. 간소 is Korean for "simplicity". */
 export function Wordmark({
   size = 'sm',
-  korean = false,
+  korean = true,
   className,
 }: {
   size?: 'sm' | 'lg'
-  /** Show 간소 next to the wordmark. */
+  /** Show 간소 next to the wordmark (on by default). */
   korean?: boolean
   className?: string
 }) {

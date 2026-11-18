@@ -47,7 +47,7 @@ export function AppShell({
             title="간소 · simplicity"
             className="mr-1 rounded-md px-1"
           >
-            <Wordmark korean />
+            <Wordmark />
           </Link>
           <span aria-hidden className="bg-border h-5 w-px" />
           <BudgetSwitcher current={budget} budgets={budgets} />
