@@ -45,6 +45,42 @@ export function SortableItem({
   )
 }
 
+/** Table-row variant of SortableItem, for use inside a <tbody>. */
+export function SortableRow({
+  id,
+  className,
+  children,
+}: {
+  id: string
+  className?: string
+  children: ReactNode
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id })
+
+  return (
+    <SortableContext value={{ attributes, listeners, setActivatorNodeRef }}>
+      <tr
+        ref={setNodeRef}
+        style={{ transform: CSS.Transform.toString(transform), transition }}
+        className={cn(
+          isDragging && 'bg-background relative z-10 opacity-80 shadow-md',
+          className,
+        )}
+      >
+        {children}
+      </tr>
+    </SortableContext>
+  )
+}
+
 export function DragHandle({ label }: { label: string }) {
   const api = use(SortableContext)
   if (!api) throw new Error('DragHandle must be inside SortableItem')

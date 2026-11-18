@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useState, useTransition } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useOptimistic,
+  useState,
+  useTransition,
+} from 'react'
+import type { ReactNode } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
   ArrowLeftRightIcon,
@@ -12,7 +19,23 @@ import {
   StickyNoteIcon,
   Undo2Icon,
 } from 'lucide-react'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { toast } from 'sonner'
+import { cn } from '#/lib/utils'
 import { Money } from '#/components/accounts/money'
 import { Button } from '#/components/ui/button'
 import { AssignedCell } from '#/components/budget/assigned-cell'
@@ -33,8 +56,9 @@ import { MonthNote } from '#/components/budget/month-note'
 import { MoveMoneyDialog } from '#/components/budget/move-money-dialog'
 import { RtaBanner } from '#/components/budget/rta-banner'
 import { NameDialog } from '#/components/categories/name-dialog'
+import { DragHandle, SortableRow } from '#/components/categories/sortable'
 import { setAssignments } from '#/server/budget-month'
-import { createCategory } from '#/server/categories'
+import { createCategory, reorderCategories } from '#/server/categories'
 import type {
   BudgetCategoryRow,
   BudgetGroupRow,
@@ -43,6 +67,18 @@ import type {
 
 // System-managed group; the server rejects new categories in it.
 const PAYMENT_GROUP_NAME = 'Credit Card Payments'
+
+// Non-draggable stand-in for SortableRow (viewers, system groups).
+function PlainRow({
+  className,
+  children,
+}: {
+  id: string
+  className?: string
+  children: ReactNode
+}) {
+  return <tr className={className}>{children}</tr>
+}
 
 export function BudgetGrid({
   budget,
@@ -59,6 +95,13 @@ export function BudgetGrid({
   const [targetFor, setTargetFor] = useState<BudgetCategoryRow | null>(null)
   const [addTo, setAddTo] = useState<BudgetGroupRow | null>(null)
   const [, startSave] = useTransition()
+  const [groups, setOptimisticGroups] = useOptimistic(view.groups)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
 
   const allCategories = view.groups.flatMap((g) => g.categories)
   const overspentCount = allCategories.filter(
@@ -181,6 +224,36 @@ export function BudgetGrid({
     })
   }
 
+  // Reorder categories within their own group; dropping onto another group is ignored.
+  function onDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
+    const group = groups.find((g) =>
+      g.categories.some((c) => c.id === active.id),
+    )
+    if (!group) return
+    const from = group.categories.findIndex((c) => c.id === active.id)
+    const to = group.categories.findIndex((c) => c.id === over.id)
+    if (from === -1 || to === -1) return
+    const categories = arrayMove(group.categories, from, to)
+    startSave(async () => {
+      setOptimisticGroups(
+        groups.map((g) => (g.id === group.id ? { ...g, categories } : g)),
+      )
+      try {
+        await reorderCategories({
+          data: {
+            budgetId: budget.id,
+            groupId: group.id,
+            categoryIds: categories.map((c) => c.id),
+          },
+        })
+      } catch {
+        toast.error('Could not reorder categories')
+      }
+      await router.invalidate()
+    })
+  }
+
   function toggle(groupId: string) {
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -255,163 +328,188 @@ export function BudgetGrid({
       </div>
 
       <div className="bg-background min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-muted-foreground sticky top-0 z-10 text-left">
-            <tr>
-              <th className="px-3 py-2 font-medium">Category</th>
-              <th className="px-3 py-2 text-right font-medium">Assigned</th>
-              <th className="px-3 py-2 text-right font-medium">Activity</th>
-              <th className="px-3 py-2 text-right font-medium">Available</th>
-              <th className="w-10 px-2 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {view.groups.map((g) => {
-              const isCollapsed = collapsed.has(g.id)
-              return (
-                <Fragment key={g.id}>
-                  <tr className="bg-muted/70 border-t font-medium">
-                    <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        aria-expanded={!isCollapsed}
-                        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${g.name}`}
-                        onClick={() => toggle(g.id)}
-                        className="flex items-center gap-1"
-                      >
-                        {isCollapsed ? (
-                          <ChevronRightIcon className="size-4" />
-                        ) : (
-                          <ChevronDownIcon className="size-4" />
-                        )}
-                        {g.name}
-                      </button>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <Money value={g.assigned} currency={budget.currency} />
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <Money value={g.activity} currency={budget.currency} />
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <Money value={g.available} currency={budget.currency} />
-                    </td>
-                    <td className="px-2 py-1">
-                      {canEdit && g.name !== PAYMENT_GROUP_NAME ? (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Add category to ${g.name}`}
-                          onClick={() => setAddTo(g)}
+        <DndContext
+          id="budget-categories"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <table className="w-full text-sm">
+            <thead className="bg-muted text-muted-foreground sticky top-0 z-10 text-left">
+              <tr>
+                <th className="px-3 py-2 font-medium">Category</th>
+                <th className="px-3 py-2 text-right font-medium">Assigned</th>
+                <th className="px-3 py-2 text-right font-medium">Activity</th>
+                <th className="px-3 py-2 text-right font-medium">Available</th>
+                <th className="w-10 px-2 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map((g) => {
+                const isCollapsed = collapsed.has(g.id)
+                const sortable = canEdit && g.name !== PAYMENT_GROUP_NAME
+                return (
+                  <Fragment key={g.id}>
+                    <tr className="bg-muted/70 border-t font-medium">
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          aria-expanded={!isCollapsed}
+                          aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${g.name}`}
+                          onClick={() => toggle(g.id)}
+                          className="flex items-center gap-1"
                         >
-                          <PlusIcon />
-                        </Button>
-                      ) : null}
-                    </td>
-                  </tr>
-                  {isCollapsed
-                    ? null
-                    : g.categories.map((c) => (
-                        <tr key={c.id} className="border-t">
-                          <td
-                            className={
-                              c.hidden
-                                ? 'text-muted-foreground px-3 py-1.5 pl-9 italic'
-                                : 'px-3 py-1.5 pl-9'
-                            }
+                          {isCollapsed ? (
+                            <ChevronRightIcon className="size-4" />
+                          ) : (
+                            <ChevronDownIcon className="size-4" />
+                          )}
+                          {g.name}
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Money value={g.assigned} currency={budget.currency} />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Money value={g.activity} currency={budget.currency} />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <Money value={g.available} currency={budget.currency} />
+                      </td>
+                      <td className="px-2 py-1">
+                        {canEdit && g.name !== PAYMENT_GROUP_NAME ? (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Add category to ${g.name}`}
+                            onClick={() => setAddTo(g)}
                           >
-                            {c.name}
-                            {c.note ? (
-                              <span
-                                className="text-muted-foreground ml-2 inline-flex items-center"
-                                title={c.note}
+                            <PlusIcon />
+                          </Button>
+                        ) : null}
+                      </td>
+                    </tr>
+                    {isCollapsed ? null : (
+                      <SortableContext
+                        items={g.categories.map((c) => c.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {g.categories.map((c) => {
+                          const Row = sortable ? SortableRow : PlainRow
+                          return (
+                            <Row key={c.id} id={c.id} className="border-t">
+                              <td
+                                className={cn(
+                                  'px-3 py-1.5',
+                                  sortable ? 'pl-4' : 'pl-9',
+                                  c.hidden && 'text-muted-foreground italic',
+                                )}
                               >
-                                <StickyNoteIcon
-                                  className="size-3.5"
-                                  aria-hidden
+                                <div className="flex items-center gap-1">
+                                  {sortable ? (
+                                    <DragHandle label={`Reorder ${c.name}`} />
+                                  ) : null}
+                                  <div>
+                                    {c.name}
+                                    {c.note ? (
+                                      <span
+                                        className="text-muted-foreground ml-2 inline-flex items-center"
+                                        title={c.note}
+                                      >
+                                        <StickyNoteIcon
+                                          className="size-3.5"
+                                          aria-hidden
+                                        />
+                                        <span className="sr-only">
+                                          Note: {c.note}
+                                        </span>
+                                      </span>
+                                    ) : null}
+                                    {c.target ? (
+                                      <TargetProgress
+                                        target={c.target}
+                                        currency={budget.currency}
+                                      />
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-3 py-1 text-right">
+                                <AssignedCell
+                                  name={c.name}
+                                  assigned={c.assigned}
+                                  currency={budget.currency}
+                                  canEdit={canEdit}
+                                  onCommit={(next) => commitAssigned(c, next)}
                                 />
-                                <span className="sr-only">Note: {c.note}</span>
-                              </span>
-                            ) : null}
-                            {c.target ? (
-                              <TargetProgress
-                                target={c.target}
-                                currency={budget.currency}
-                              />
-                            ) : null}
-                          </td>
-                          <td className="px-3 py-1 text-right">
-                            <AssignedCell
-                              name={c.name}
-                              assigned={c.assigned}
-                              currency={budget.currency}
-                              canEdit={canEdit}
-                              onCommit={(next) => commitAssigned(c, next)}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5 text-right">
-                            <Money
-                              value={c.activity}
-                              currency={budget.currency}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5 text-right">
-                            <AvailablePill
-                              category={c}
-                              currency={budget.currency}
-                            />
-                          </td>
-                          <td className="px-2 py-1">
-                            {canEdit ? (
-                              <div className="flex gap-0.5">
-                                <Button
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Set target for ${c.name}`}
-                                  onClick={() => setTargetFor(c)}
-                                >
-                                  <TargetIcon />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Move money from ${c.name}`}
-                                  onClick={() => setMoveFrom(c)}
-                                >
-                                  <ArrowLeftRightIcon />
-                                </Button>
-                              </div>
-                            ) : null}
-                          </td>
-                        </tr>
-                      ))}
-                </Fragment>
-              )
-            })}
-            <tr className="bg-muted/50 border-t font-semibold">
-              <td className="px-3 py-2">Total</td>
-              <td className="px-3 py-2 text-right">
-                <Money
-                  value={view.totals.assigned}
-                  currency={budget.currency}
-                />
-              </td>
-              <td className="px-3 py-2 text-right">
-                <Money
-                  value={view.totals.activity}
-                  currency={budget.currency}
-                />
-              </td>
-              <td className="px-3 py-2 text-right">
-                <Money
-                  value={view.totals.available}
-                  currency={budget.currency}
-                />
-              </td>
-              <td />
-            </tr>
-          </tbody>
-        </table>
+                              </td>
+                              <td className="px-3 py-1.5 text-right">
+                                <Money
+                                  value={c.activity}
+                                  currency={budget.currency}
+                                />
+                              </td>
+                              <td className="px-3 py-1.5 text-right">
+                                <AvailablePill
+                                  category={c}
+                                  currency={budget.currency}
+                                />
+                              </td>
+                              <td className="px-2 py-1">
+                                {canEdit ? (
+                                  <div className="flex gap-0.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      aria-label={`Set target for ${c.name}`}
+                                      onClick={() => setTargetFor(c)}
+                                    >
+                                      <TargetIcon />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      aria-label={`Move money from ${c.name}`}
+                                      onClick={() => setMoveFrom(c)}
+                                    >
+                                      <ArrowLeftRightIcon />
+                                    </Button>
+                                  </div>
+                                ) : null}
+                              </td>
+                            </Row>
+                          )
+                        })}
+                      </SortableContext>
+                    )}
+                  </Fragment>
+                )
+              })}
+              <tr className="bg-muted/50 border-t font-semibold">
+                <td className="px-3 py-2">Total</td>
+                <td className="px-3 py-2 text-right">
+                  <Money
+                    value={view.totals.assigned}
+                    currency={budget.currency}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Money
+                    value={view.totals.activity}
+                    currency={budget.currency}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Money
+                    value={view.totals.available}
+                    currency={budget.currency}
+                  />
+                </td>
+                <td />
+              </tr>
+            </tbody>
+          </table>
+        </DndContext>
       </div>
 
       {targetFor ? (
