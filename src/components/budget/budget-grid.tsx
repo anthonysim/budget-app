@@ -264,10 +264,9 @@ export function BudgetGrid({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      {/* Pinned header tile; the table tile below scrolls on its own. */}
-      <div className="bg-background grid shrink-0 grid-cols-[1fr_auto] gap-3 rounded-xl border p-4">
-        <div className="col-span-2 flex flex-wrap items-center gap-3">
+    <div className="flex flex-col gap-4 p-6">
+      <div className="grid grid-cols-[1fr_auto] gap-3">
+        <div className="col-span-2 flex flex-wrap items-center justify-between gap-3">
           <MonthNav budgetId={budget.id} month={view.month} />
           <RtaBanner
             readyToAssign={view.readyToAssign}
@@ -330,7 +329,7 @@ export function BudgetGrid({
         ) : null}
       </div>
 
-      <div className="bg-background min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="overflow-clip rounded-lg border">
         <DndContext
           id="budget-categories"
           sensors={sensors}
