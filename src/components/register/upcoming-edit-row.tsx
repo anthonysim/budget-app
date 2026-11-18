@@ -182,7 +182,7 @@ export function UpcomingEditRow({
         <td className={cell}>
           <Input
             aria-label="Payee"
-            className="h-8 min-w-36"
+            className="h-8"
             list="register-payees"
             autoFocus
             autoComplete="off"
@@ -215,7 +215,7 @@ export function UpcomingEditRow({
         <td className={cell}>
           <Input
             aria-label="Memo"
-            className="h-8 min-w-28"
+            className="h-8"
             maxLength={500}
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
