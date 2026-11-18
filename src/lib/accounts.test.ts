@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createAccountSchema,
   moveWithinGroup,
+  reorderWithinGroup,
   isOnBudgetType,
   startingBalanceFor,
 } from './accounts'
@@ -59,5 +60,26 @@ describe('accounts', () => {
     ])
     expect(moveWithinGroup(all, group, 'a', -1)).toEqual(all)
     expect(moveWithinGroup(all, group, 'c', 1)).toEqual(all)
+  })
+
+  it('reorders by drag within a group, leaving other groups in place', () => {
+    const all = ['a', 'x', 'b', 'y', 'c']
+    const group = ['a', 'b', 'c']
+    expect(reorderWithinGroup(all, group, 'c', 'a')).toEqual([
+      'c',
+      'x',
+      'a',
+      'y',
+      'b',
+    ])
+    expect(reorderWithinGroup(all, group, 'a', 'c')).toEqual([
+      'b',
+      'x',
+      'c',
+      'y',
+      'a',
+    ])
+    expect(reorderWithinGroup(all, group, 'a', 'a')).toEqual(all)
+    expect(reorderWithinGroup(all, group, 'a', 'x')).toEqual(all)
   })
 })
