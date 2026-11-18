@@ -22,7 +22,7 @@ export function RtaBanner({
           'border-positive/30 bg-positive-soft text-positive-foreground',
         state === 'negative' &&
           'border-negative/30 bg-negative-soft text-negative-foreground',
-        state === 'zero' && 'bg-muted',
+        state === 'zero' && 'border-primary bg-primary text-primary-foreground',
       )}
     >
       <Money
