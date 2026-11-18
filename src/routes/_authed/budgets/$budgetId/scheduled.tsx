@@ -6,6 +6,11 @@ import { Money } from '#/components/accounts/money'
 import { ConfirmDialog } from '#/components/categories/confirm-dialog'
 import { ScheduledDialog } from '#/components/scheduled/scheduled-dialog'
 import { Button } from '#/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#/components/ui/tooltip'
 import { formatDateString } from '#/lib/date'
 import { FREQUENCY_LABELS } from '#/lib/schedule'
 import {
@@ -126,43 +131,58 @@ function ScheduledPage() {
                         >
                           Enter now
                         </Button>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label={`Skip next ${s.payeeName ?? 'occurrence'}`}
-                          disabled={pending}
-                          onClick={() =>
-                            run(
-                              () =>
-                                skipScheduled({
-                                  data: {
-                                    budgetId: budget.id,
-                                    scheduledId: s.id,
-                                  },
-                                }),
-                              'Skipped',
-                            )
-                          }
-                        >
-                          <SkipForwardIcon />
-                        </Button>
-                        <ScheduledDialog {...dialogProps} scheduled={s}>
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            aria-label={`Edit scheduled ${s.payeeName ?? ''}`}
-                          >
-                            <PencilIcon />
-                          </Button>
-                        </ScheduledDialog>
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          aria-label={`Delete scheduled ${s.payeeName ?? ''}`}
-                          onClick={() => setDeleting(s)}
-                        >
-                          <Trash2Icon />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              aria-label={`Skip next ${s.payeeName ?? 'occurrence'}`}
+                              disabled={pending}
+                              onClick={() =>
+                                run(
+                                  () =>
+                                    skipScheduled({
+                                      data: {
+                                        budgetId: budget.id,
+                                        scheduledId: s.id,
+                                      },
+                                    }),
+                                  'Skipped',
+                                )
+                              }
+                            >
+                              <SkipForwardIcon />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Skip next occurrence</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <ScheduledDialog {...dialogProps} scheduled={s}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                aria-label={`Edit scheduled ${s.payeeName ?? ''}`}
+                              >
+                                <PencilIcon />
+                              </Button>
+                            </TooltipTrigger>
+                          </ScheduledDialog>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              aria-label={`Delete scheduled ${s.payeeName ?? ''}`}
+                              onClick={() => setDeleting(s)}
+                            >
+                              <Trash2Icon />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   ) : null}
