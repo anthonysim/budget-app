@@ -61,7 +61,7 @@ export function ScheduledDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <ScheduledForm {...props} onDone={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
