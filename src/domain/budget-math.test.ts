@@ -156,7 +156,7 @@ describe('computeBudgetMonth', () => {
     expect(r.categories.get(A)?.available).toBe(125_000)
   })
 
-  it('assignments in later months do not affect earlier months', () => {
+  it('assignments in later months reduce earlier months Ready to Assign', () => {
     const base = input({
       income: [{ month: NOV, amount: 500_000 }],
       assignments: [
@@ -164,9 +164,45 @@ describe('computeBudgetMonth', () => {
         { categoryId: B, month: JAN, assigned: 300_000 },
       ],
     })
-    expect(computeBudgetMonth(base, NOV).readyToAssign).toBe(400_000)
-    expect(computeBudgetMonth(base, DEC).readyToAssign).toBe(400_000)
+    expect(computeBudgetMonth(base, NOV).readyToAssign).toBe(100_000)
+    expect(computeBudgetMonth(base, DEC).readyToAssign).toBe(100_000)
     expect(computeBudgetMonth(base, JAN).readyToAssign).toBe(100_000)
+  })
+
+  it('splitting an inflow between this month and next shows the same Ready to Assign in both', () => {
+    const base = input({
+      income: [{ month: NOV, amount: 1000_000 }],
+      assignments: [
+        { categoryId: A, month: NOV, assigned: 200_000 },
+        { categoryId: B, month: DEC, assigned: 800_000 },
+      ],
+    })
+    expect(computeBudgetMonth(base, NOV).readyToAssign).toBe(0)
+    expect(computeBudgetMonth(base, DEC).readyToAssign).toBe(0)
+  })
+
+  it('Ready to Assign is the same pool in every month, whatever month income or assignments fall in', () => {
+    const base = input({
+      income: [
+        { month: NOV, amount: 500_000 },
+        { month: DEC, amount: 300_000 },
+      ],
+      assignments: [{ categoryId: B, month: DEC, assigned: 300_000 }],
+    })
+    expect(computeBudgetMonth(base, NOV).readyToAssign).toBe(500_000)
+    expect(computeBudgetMonth(base, DEC).readyToAssign).toBe(500_000)
+  })
+
+  it('income dated after an assignment still counts against it', () => {
+    const base = input({
+      income: [{ month: DEC, amount: 1000_000 }],
+      assignments: [
+        { categoryId: A, month: NOV, assigned: 200_000 },
+        { categoryId: B, month: DEC, assigned: 800_000 },
+      ],
+    })
+    expect(computeBudgetMonth(base, NOV).readyToAssign).toBe(0)
+    expect(computeBudgetMonth(base, DEC).readyToAssign).toBe(0)
   })
 
   it('overassigning makes Ready to Assign negative', () => {
@@ -180,7 +216,7 @@ describe('computeBudgetMonth', () => {
     expect(r.readyToAssign).toBe(-150_000)
   })
 
-  it('a target month before any data is all zeros', () => {
+  it('a target month before any data has empty categories but shows the shared pool', () => {
     const r = computeBudgetMonth(
       input({
         income: [{ month: DEC, amount: 100_000 }],
@@ -188,7 +224,7 @@ describe('computeBudgetMonth', () => {
       }),
       NOV,
     )
-    expect(r.readyToAssign).toBe(0)
+    expect(r.readyToAssign).toBe(50_000)
     expect(r.categories.get(A)?.available).toBe(0)
   })
 
