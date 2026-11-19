@@ -140,6 +140,23 @@ export async function queryBudgetMathInput(
   }
 }
 
+/**
+ * Assigned, activity and available for one category in the month containing `date`
+ * ("YYYY-MM-DD"). Null for categories outside the budget math (e.g. the Inflow category).
+ */
+export async function queryCategoryMonthSummary(
+  budgetId: string,
+  categoryId: string,
+  date: string,
+): Promise<{ assigned: number; activity: number; available: number } | null> {
+  const month = `${date.slice(0, 7)}-01`
+  const result = computeBudgetMonth(await queryBudgetMathInput(budgetId), month)
+  const m = result.categories.get(categoryId)
+  return m
+    ? { assigned: m.assigned, activity: m.activity, available: m.available }
+    : null
+}
+
 /** Budget screen data for one month: Ready to Assign plus groups with per-category numbers. */
 export async function queryBudgetMonth(
   budgetId: string,
