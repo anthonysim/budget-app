@@ -5,6 +5,7 @@ import {
   formatMoneyField,
   milliunitsToDollars,
   normalizeMoneyText,
+  parseMoneyExpression,
   parseMoneyInput,
   parsePercentToBps,
 } from './money'
@@ -72,5 +73,28 @@ describe('money input formatting', () => {
     expect(normalizeMoneyText('')).toBe('')
     expect(normalizeMoneyText('abc')).toBe('abc')
     expect(normalizeMoneyText('1.2345')).toBe('1.2345')
+  })
+
+  it('evaluates arithmetic in money expressions', () => {
+    expect(parseMoneyExpression('3201.15+35.07')).toBe(3_236_220)
+    expect(parseMoneyExpression('100-12.5')).toBe(87_500)
+    expect(parseMoneyExpression('(20+5)*2')).toBe(50_000)
+    expect(parseMoneyExpression('$1,200 / 3')).toBe(400_000)
+    expect(parseMoneyExpression('50')).toBe(50_000)
+    expect(parseMoneyExpression('-50')).toBe(-50_000)
+  })
+
+  it('rejects invalid money expressions', () => {
+    expect(parseMoneyExpression('')).toBeNull()
+    expect(parseMoneyExpression('10+')).toBeNull()
+    expect(parseMoneyExpression('*2')).toBeNull()
+    expect(parseMoneyExpression('10/0')).toBeNull()
+    expect(parseMoneyExpression('abc')).toBeNull()
+  })
+
+  it('normalizes expressions only when enabled', () => {
+    expect(normalizeMoneyText('3201.15+35.07', true)).toBe('3236.22')
+    expect(normalizeMoneyText('3201.15+35.07')).toBe('3201.15+35.07')
+    expect(normalizeMoneyText('10+', true)).toBe('10+')
   })
 })

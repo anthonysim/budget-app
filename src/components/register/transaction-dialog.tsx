@@ -17,7 +17,7 @@ import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
-import { formatMoneyField, parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyExpression } from '#/lib/money'
 import { splitRemaining, validateSplit } from '#/lib/splits'
 import { combineAmount, dateSchema, splitAmount } from '#/lib/transactions'
 import { parseTransferPayee } from '#/lib/transfers'
@@ -49,7 +49,7 @@ function moneyField(milli: number): string {
 }
 
 function parseField(text: string): number | null {
-  return text.trim() === '' ? 0 : parseMoneyInput(text)
+  return text.trim() === '' ? 0 : parseMoneyExpression(text)
 }
 
 let lineSeq = 0
@@ -357,6 +357,7 @@ function TransactionForm({
           <Label htmlFor="txn-outflow">Outflow</Label>
           <MoneyInput
             id="txn-outflow"
+            expressions
             placeholder="0.00"
             value={outflow}
             onChange={(e) => setOutflow(e.target.value)}
@@ -366,6 +367,7 @@ function TransactionForm({
           <Label htmlFor="txn-inflow">Inflow</Label>
           <MoneyInput
             id="txn-inflow"
+            expressions
             placeholder="0.00"
             value={inflow}
             onChange={(e) => setInflow(e.target.value)}
@@ -442,6 +444,7 @@ function TransactionForm({
               <div className="grid grid-cols-2 gap-3">
                 <MoneyInput
                   aria-label={`Split ${i + 1} outflow`}
+                  expressions
                   placeholder="Outflow 0.00"
                   value={l.outflow}
                   onChange={(e) =>
@@ -450,6 +453,7 @@ function TransactionForm({
                 />
                 <MoneyInput
                   aria-label={`Split ${i + 1} inflow`}
+                  expressions
                   placeholder="Inflow 0.00"
                   value={l.inflow}
                   onChange={(e) =>
