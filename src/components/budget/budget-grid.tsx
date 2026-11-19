@@ -1,6 +1,7 @@
 import { Fragment, useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import {
+  ChevronsDownUpIcon,
   ChevronsUpDownIcon,
   WandSparklesIcon,
   Redo2Icon,
@@ -233,6 +234,13 @@ export function BudgetGrid({
     await router.invalidate()
   }
 
+  const allCollapsed =
+    groups.length > 0 && groups.every((g) => collapsed.has(g.id))
+
+  function toggleAll() {
+    setCollapsed(allCollapsed ? new Set() : new Set(groups.map((g) => g.id)))
+  }
+
   function toggle(groupId: string) {
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -263,49 +271,51 @@ export function BudgetGrid({
           />
         </div>
 
-        {canEdit ? (
-          <div className="flex items-end gap-1 justify-self-end">
-            <div className="flex gap-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <WandSparklesIcon /> Auto-assign <ChevronsUpDownIcon />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {(
-                    Object.keys(AUTO_ASSIGN_LABELS) as Array<AutoAssignAction>
-                  ).map((action) => (
-                    <DropdownMenuItem
-                      key={action}
-                      onSelect={() => runAutoAssign(action)}
-                    >
-                      {AUTO_ASSIGN_LABELS[action]}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!history.canUndo}
-                onClick={history.undo}
-                aria-label="Undo"
-              >
-                <Undo2Icon /> Undo
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!history.canRedo}
-                onClick={history.redo}
-                aria-label="Redo"
-              >
-                <Redo2Icon /> Redo
-              </Button>
-            </div>
+        <div className="flex items-end gap-1 justify-self-end">
+          <div className="flex gap-1">
+            {canEdit ? (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <WandSparklesIcon /> Auto-assign <ChevronsUpDownIcon />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {(
+                      Object.keys(AUTO_ASSIGN_LABELS) as Array<AutoAssignAction>
+                    ).map((action) => (
+                      <DropdownMenuItem
+                        key={action}
+                        onSelect={() => runAutoAssign(action)}
+                      >
+                        {AUTO_ASSIGN_LABELS[action]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!history.canUndo}
+                  onClick={history.undo}
+                  aria-label="Undo"
+                >
+                  <Undo2Icon /> Undo
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!history.canRedo}
+                  onClick={history.redo}
+                  aria-label="Redo"
+                >
+                  <Redo2Icon /> Redo
+                </Button>
+              </>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
 
       <div className="overflow-clip rounded-lg border">
@@ -322,7 +332,21 @@ export function BudgetGrid({
                 <th className="px-3 py-2 text-right font-medium">Assigned</th>
                 <th className="px-3 py-2 text-right font-medium">Activity</th>
                 <th className="px-3 py-2 text-right font-medium">Available</th>
-                <th className="w-10 px-2 py-2" />
+                <th className="w-10 px-2 py-1 text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={toggleAll}
+                    aria-label={allCollapsed ? 'Expand all' : 'Collapse all'}
+                    title={allCollapsed ? 'Expand all' : 'Collapse all'}
+                  >
+                    {allCollapsed ? (
+                      <ChevronsUpDownIcon />
+                    ) : (
+                      <ChevronsDownUpIcon />
+                    )}
+                  </Button>
+                </th>
               </tr>
             </thead>
             <tbody>
