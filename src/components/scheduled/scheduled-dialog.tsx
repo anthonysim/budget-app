@@ -52,15 +52,26 @@ interface FormProps {
   scheduled?: ScheduledListRow
 }
 
-/** Create or edit a scheduled transaction. Opens in a dialog; the form remounts on every open. */
+/**
+ * Create or edit a scheduled transaction in a dialog; the form remounts on every open.
+ * Uncontrolled with a trigger by default, or pass `open`/`onOpenChange` to control it.
+ */
 export function ScheduledDialog({
   children,
+  open: controlledOpen,
+  onOpenChange,
   ...props
-}: FormProps & { children: ReactNode }) {
-  const [open, setOpen] = useState(false)
+}: FormProps & {
+  children?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+  const setOpen = onOpenChange ?? setInternalOpen
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
       <DialogContent className="max-h-[90vh] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <ScheduledForm {...props} onDone={() => setOpen(false)} />
       </DialogContent>

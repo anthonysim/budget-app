@@ -25,7 +25,7 @@ import {
 import { BulkBar } from '#/components/register/bulk-bar'
 import { buildColumns } from '#/components/register/columns'
 import type { RegisterMeta } from '#/components/register/columns'
-import { EditRow } from '#/components/register/edit-row'
+import { TransactionDialog } from '#/components/register/transaction-dialog'
 import { NativeSelect } from '#/components/register/native-select'
 import {
   FLAGS,
@@ -257,11 +257,12 @@ export function Register({
     payees: data.payees,
     categoryGroups: data.categoryGroups,
     inflowCategoryId: data.inflowCategoryId,
-    showAccountColumn: !singleAccount,
-    showBalanceColumn: singleAccount,
     currency: budget.currency,
-    onDone: () => setEditingId(null),
   }
+  const editingTransaction =
+    editingId !== null && editingId !== 'new'
+      ? data.transactions.find((t) => t.id === editingId)
+      : undefined
 
   return (
     <section aria-label="Transactions" className="flex flex-col gap-3">
@@ -405,7 +406,6 @@ export function Register({
             ))}
           </thead>
           <tbody>
-            {editingId === 'new' ? <EditRow {...editProps} /> : null}
             {data.scheduled.length > 0 ? (
               <tr className="bg-muted/50 border-t">
                 <td colSpan={columnCount} className="p-0">
@@ -437,66 +437,56 @@ export function Register({
                 inflowCategoryId={data.inflowCategoryId}
               />
             ) : null}
-            {table.getRowModel().rows.map((row) =>
-              editingId === row.original.id ? (
-                <EditRow
-                  key={row.id}
-                  {...editProps}
-                  transaction={row.original}
-                  existingSplits={splitsByTxn.get(row.original.id)}
-                  confirmReconciled={editingReconciled}
-                />
-              ) : (
-                <Fragment key={row.id}>
-                  <tr
-                    tabIndex={0}
-                    data-state={row.getIsSelected() ? 'selected' : undefined}
-                    data-approved={row.original.approved}
-                    onKeyDown={(e) => moveFocus(e, row.original)}
-                    className="data-[approved=false]:border-l-primary data-[approved=false]:border-l-4 data-[approved=false]:font-semibold data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-2 py-1.5">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  {(splitsByTxn.get(row.original.id) ?? []).map((sp) => (
-                    <tr
-                      key={sp.id}
-                      data-testid="split-display-line"
-                      className="bg-muted/20 text-muted-foreground"
-                    >
-                      <td />
-                      {!singleAccount ? <td /> : null}
-                      <td />
-                      <td className="px-2 py-1 pl-6 text-xs">Split</td>
-                      <td className="px-2 py-1">
-                        {sp.categoryName ?? 'Uncategorized'}
-                      </td>
-                      <td className="px-2 py-1">{sp.memo ?? ''}</td>
-                      <td className="px-2 py-1 text-right">
-                        {sp.amount < 0 ? (
-                          <Money value={sp.amount} currency={budget.currency} />
-                        ) : null}
-                      </td>
-                      <td className="px-2 py-1 text-right">
-                        {sp.amount > 0 ? (
-                          <Money value={sp.amount} currency={budget.currency} />
-                        ) : null}
-                      </td>
-                      <td />
-                      {singleAccount ? <td /> : null}
-                      <td />
-                    </tr>
+            {table.getRowModel().rows.map((row) => (
+              <Fragment key={row.id}>
+                <tr
+                  tabIndex={0}
+                  data-state={row.getIsSelected() ? 'selected' : undefined}
+                  data-approved={row.original.approved}
+                  onKeyDown={(e) => moveFocus(e, row.original)}
+                  className="data-[approved=false]:border-l-primary data-[approved=false]:border-l-4 data-[approved=false]:font-semibold data-[state=selected]:bg-muted/60 hover:bg-muted/30 focus-visible:ring-ring border-t outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-2 py-1.5">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
                   ))}
-                </Fragment>
-              ),
-            )}
-            {rows.length === 0 && editingId !== 'new' ? (
+                </tr>
+                {(splitsByTxn.get(row.original.id) ?? []).map((sp) => (
+                  <tr
+                    key={sp.id}
+                    data-testid="split-display-line"
+                    className="bg-muted/20 text-muted-foreground"
+                  >
+                    <td />
+                    {!singleAccount ? <td /> : null}
+                    <td />
+                    <td className="px-2 py-1 pl-6 text-xs">Split</td>
+                    <td className="px-2 py-1">
+                      {sp.categoryName ?? 'Uncategorized'}
+                    </td>
+                    <td className="px-2 py-1">{sp.memo ?? ''}</td>
+                    <td className="px-2 py-1 text-right">
+                      {sp.amount < 0 ? (
+                        <Money value={sp.amount} currency={budget.currency} />
+                      ) : null}
+                    </td>
+                    <td className="px-2 py-1 text-right">
+                      {sp.amount > 0 ? (
+                        <Money value={sp.amount} currency={budget.currency} />
+                      ) : null}
+                    </td>
+                    <td />
+                    {singleAccount ? <td /> : null}
+                    <td />
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+            {rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={columnCount}
@@ -511,6 +501,23 @@ export function Register({
           </tbody>
         </table>
       </div>
+      {editingId !== null && (editingId === 'new' || editingTransaction) ? (
+        <TransactionDialog
+          key={editingId}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditingId(null)
+          }}
+          {...editProps}
+          transaction={editingTransaction}
+          existingSplits={
+            editingTransaction
+              ? splitsByTxn.get(editingTransaction.id)
+              : undefined
+          }
+          confirmReconciled={editingReconciled}
+        />
+      ) : null}
       <ConfirmDialog
         open={confirmEditId !== null}
         onOpenChange={(open) => {

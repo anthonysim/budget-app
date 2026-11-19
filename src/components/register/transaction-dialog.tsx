@@ -1,10 +1,18 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from '@tanstack/react-router'
-import { CheckIcon, PlusIcon, SplitIcon, Trash2Icon, XIcon } from 'lucide-react'
+import { PlusIcon, SplitIcon, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Money } from '#/components/accounts/money'
 import { Button } from '#/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
@@ -53,22 +61,7 @@ const newLine = (over: Partial<LineDraft> = {}): LineDraft => ({
   ...over,
 })
 
-/** Inline add/edit row (plus split lines). Enter saves, Escape cancels. */
-export function EditRow({
-  budgetId,
-  transaction,
-  existingSplits,
-  fixedAccountId,
-  accounts,
-  payees,
-  categoryGroups,
-  inflowCategoryId,
-  showAccountColumn,
-  showBalanceColumn,
-  confirmReconciled,
-  currency,
-  onDone,
-}: {
+interface FormProps {
   budgetId: string
   /** Undefined = adding a new transaction. */
   transaction?: TransactionRow
@@ -79,13 +72,42 @@ export function EditRow({
   payees: Array<PayeeRow>
   categoryGroups: Array<CategoryGroupRow>
   inflowCategoryId: string | null
-  showAccountColumn: boolean
-  showBalanceColumn: boolean
   /** The user already confirmed editing a reconciled transaction. */
   confirmReconciled?: boolean
   currency: string
-  onDone: () => void
-}) {
+}
+
+/**
+ * Add or edit a transaction (including splits) in a dialog. Render it only while editing
+ * (or give it a `key` per transaction) so the form state starts fresh on every open.
+ */
+export function TransactionDialog({
+  open,
+  onOpenChange,
+  ...props
+}: FormProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <TransactionForm {...props} onDone={() => onOpenChange(false)} />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function TransactionForm({
+  budgetId,
+  transaction,
+  existingSplits,
+  fixedAccountId,
+  accounts,
+  payees,
+  categoryGroups,
+  inflowCategoryId,
+  confirmReconciled,
+  currency,
+  onDone,
+}: FormProps & { onDone: () => void }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -176,7 +198,8 @@ export function EditRow({
     )
   }
 
-  function save() {
+  function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     if (!dateSchema.safeParse(date).success) {
       setError('Enter a valid date')
       return
@@ -253,212 +276,140 @@ export function EditRow({
     })
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLTableRowElement>) {
-    if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) {
-      e.preventDefault()
-      save()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      onDone()
-    }
-  }
-
-  const cell = 'px-2 py-1.5 align-middle'
   return (
-    <>
-      <tr className="bg-muted/40 border-t" onKeyDown={onKeyDown}>
-        <td className={cell} />
-        {showAccountColumn ? (
-          <td className={cell}>
-            <NativeSelect
-              aria-label="Account"
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-            >
-              {accounts
-                .filter((a) => !a.closed || a.id === initialAccountId)
-                .map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-            </NativeSelect>
-          </td>
-        ) : null}
-        <td className={cell}>
+    <form method="post" onSubmit={submit} noValidate className="grid gap-4">
+      <DialogHeader>
+        <DialogTitle>
+          {transaction ? 'Edit transaction' : 'Add transaction'}
+        </DialogTitle>
+      </DialogHeader>
+
+      {fixedAccountId === undefined ? (
+        <div className="grid gap-2">
+          <Label htmlFor="txn-account">Account</Label>
+          <NativeSelect
+            id="txn-account"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+          >
+            {accounts
+              .filter((a) => !a.closed || a.id === initialAccountId)
+              .map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+          </NativeSelect>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-2">
+          <Label htmlFor="txn-date">Date</Label>
           <Input
-            aria-label="Date"
+            id="txn-date"
             type="date"
-            className="h-8 w-[7.5rem] px-2"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
-        </td>
-        <td className={cell}>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="txn-payee">Payee</Label>
           <Input
-            aria-label="Payee"
-            className="h-8"
+            id="txn-payee"
             list="register-payees"
-            autoFocus
             autoComplete="off"
             maxLength={80}
             value={payeeName}
             onChange={(e) => onPayeeChange(e.target.value)}
           />
-        </td>
-        <td className={cell}>
-          <NativeSelect
-            aria-label="Category"
-            value={categoryApplies ? categoryId : ''}
-            disabled={!categoryApplies}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <CategoryOptions
-              groups={categoryGroups}
-              inflowCategoryId={inflowCategoryId}
-              selectedId={categoryId}
-              uncategorizedLabel={
-                isSplit
-                  ? 'Split (see lines below)'
-                  : categoryApplies
-                    ? 'Uncategorized'
-                    : isTransfer
-                      ? 'No category (transfer)'
-                      : 'No category (tracking)'
-              }
-            />
-          </NativeSelect>
-        </td>
-        <td className={cell}>
-          <Input
-            aria-label="Memo"
-            className="h-8"
-            maxLength={500}
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
+        </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="txn-category">Category</Label>
+        <NativeSelect
+          id="txn-category"
+          value={categoryApplies ? categoryId : ''}
+          disabled={!categoryApplies}
+          onChange={(e) => setCategoryId(e.target.value)}
+        >
+          <CategoryOptions
+            groups={categoryGroups}
+            inflowCategoryId={inflowCategoryId}
+            selectedId={categoryId}
+            uncategorizedLabel={
+              isSplit
+                ? 'Split (see lines below)'
+                : categoryApplies
+                  ? 'Uncategorized'
+                  : isTransfer
+                    ? 'No category (transfer)'
+                    : 'No category (tracking)'
+            }
           />
-        </td>
-        <td className={cell}>
+        </NativeSelect>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-2">
+          <Label htmlFor="txn-outflow">Outflow</Label>
           <Input
-            aria-label="Outflow"
-            className="h-8 w-24 px-2 text-right"
+            id="txn-outflow"
             inputMode="decimal"
             placeholder="0.00"
             autoComplete="off"
             value={outflow}
             onChange={(e) => setOutflow(e.target.value)}
           />
-        </td>
-        <td className={cell}>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="txn-inflow">Inflow</Label>
           <Input
-            aria-label="Inflow"
-            className="h-8 w-24 px-2 text-right"
+            id="txn-inflow"
             inputMode="decimal"
             placeholder="0.00"
             autoComplete="off"
             value={inflow}
             onChange={(e) => setInflow(e.target.value)}
           />
-        </td>
-        <td className={`${cell} text-center`}>
-          <input
-            type="checkbox"
-            aria-label="Cleared"
-            className="size-4"
-            checked={cleared}
-            onChange={(e) => setCleared(e.target.checked)}
-          />
-        </td>
-        {showBalanceColumn ? <td className={cell} /> : null}
-        <td className={cell}>
-          <div className="flex gap-1">
-            <Button
-              size="icon-sm"
-              aria-label="Save transaction"
-              disabled={pending}
-              onClick={save}
-            >
-              <CheckIcon />
-            </Button>
-            <Button
-              size="icon-sm"
-              variant="outline"
-              aria-label="Cancel"
-              onClick={onDone}
-            >
-              <XIcon />
-            </Button>
-          </div>
-        </td>
-      </tr>
+        </div>
+      </div>
 
-      {isSplit
-        ? lines.map((l, i) => (
-            <tr
+      <div className="grid gap-2">
+        <Label htmlFor="txn-memo">Memo</Label>
+        <Input
+          id="txn-memo"
+          maxLength={500}
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+        />
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-4"
+          checked={cleared}
+          onChange={(e) => setCleared(e.target.checked)}
+        />
+        Cleared
+      </label>
+
+      {isSplit ? (
+        <div className="grid gap-3 rounded-lg border p-3">
+          {lines.map((l, i) => (
+            <div
               key={l.key}
-              className="bg-muted/20"
-              onKeyDown={onKeyDown}
               data-testid="split-line"
+              className="grid gap-2 border-b pb-3 last:border-b-0 last:pb-0"
             >
-              <td className={cell} />
-              {showAccountColumn ? <td className={cell} /> : null}
-              <td className={cell} />
-              <td className={`${cell} text-muted-foreground pl-6 text-xs`}>
-                Split {i + 1}
-              </td>
-              <td className={cell}>
-                <NativeSelect
-                  aria-label={`Split ${i + 1} category`}
-                  value={l.categoryId}
-                  onChange={(e) =>
-                    updateLine(l.key, { categoryId: e.target.value })
-                  }
-                >
-                  <CategoryOptions
-                    groups={categoryGroups}
-                    inflowCategoryId={inflowCategoryId}
-                    selectedId={l.categoryId}
-                  />
-                </NativeSelect>
-              </td>
-              <td className={cell}>
-                <Input
-                  aria-label={`Split ${i + 1} memo`}
-                  className="h-8"
-                  value={l.memo}
-                  onChange={(e) => updateLine(l.key, { memo: e.target.value })}
-                />
-              </td>
-              <td className={cell}>
-                <Input
-                  aria-label={`Split ${i + 1} outflow`}
-                  className="h-8 w-24 px-2 text-right"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  autoComplete="off"
-                  value={l.outflow}
-                  onChange={(e) =>
-                    updateLine(l.key, { outflow: e.target.value })
-                  }
-                />
-              </td>
-              <td className={cell}>
-                <Input
-                  aria-label={`Split ${i + 1} inflow`}
-                  className="h-8 w-24 px-2 text-right"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  autoComplete="off"
-                  value={l.inflow}
-                  onChange={(e) =>
-                    updateLine(l.key, { inflow: e.target.value })
-                  }
-                />
-              </td>
-              <td className={cell} />
-              {showBalanceColumn ? <td className={cell} /> : null}
-              <td className={cell}>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">
+                  Split {i + 1}
+                </span>
                 <Button
+                  type="button"
                   size="icon-sm"
                   variant="ghost"
                   aria-label={`Remove split ${i + 1}`}
@@ -471,73 +422,108 @@ export function EditRow({
                 >
                   <Trash2Icon />
                 </Button>
-              </td>
-            </tr>
-          ))
-        : null}
-
-      <tr className="bg-muted/40" onKeyDown={onKeyDown}>
-        <td />
-        {showAccountColumn ? <td /> : null}
-        <td colSpan={12} className="px-2 pt-0.5 pb-2 text-sm">
-          <div className="flex flex-wrap items-center gap-3">
-            {canSplit && !isSplit ? (
-              <Button
-                size="xs"
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground -ml-2"
-                onClick={startSplit}
+              </div>
+              <NativeSelect
+                aria-label={`Split ${i + 1} category`}
+                value={l.categoryId}
+                onChange={(e) =>
+                  updateLine(l.key, { categoryId: e.target.value })
+                }
               >
-                <SplitIcon /> Split transaction
-              </Button>
-            ) : null}
-            {isSplit ? (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setLines((ls) => (ls ? [...ls, newLine()] : ls))
+                <CategoryOptions
+                  groups={categoryGroups}
+                  inflowCategoryId={inflowCategoryId}
+                  selectedId={l.categoryId}
+                />
+              </NativeSelect>
+              <Input
+                aria-label={`Split ${i + 1} memo`}
+                placeholder="Memo"
+                value={l.memo}
+                onChange={(e) => updateLine(l.key, { memo: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  aria-label={`Split ${i + 1} outflow`}
+                  inputMode="decimal"
+                  placeholder="Outflow 0.00"
+                  autoComplete="off"
+                  value={l.outflow}
+                  onChange={(e) =>
+                    updateLine(l.key, { outflow: e.target.value })
                   }
-                >
-                  <PlusIcon /> Add line
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setLines(null)
-                  }}
-                >
-                  Remove split
-                </Button>
-                <span
-                  aria-live="polite"
-                  className={
-                    remaining === 0 ? 'text-positive' : 'text-destructive'
+                />
+                <Input
+                  aria-label={`Split ${i + 1} inflow`}
+                  inputMode="decimal"
+                  placeholder="Inflow 0.00"
+                  autoComplete="off"
+                  value={l.inflow}
+                  onChange={(e) =>
+                    updateLine(l.key, { inflow: e.target.value })
                   }
-                >
-                  {remaining === null ? (
-                    'Enter valid amounts'
-                  ) : remaining === 0 ? (
-                    'Split adds up'
-                  ) : (
-                    <>
-                      Remaining to split:{' '}
-                      <Money value={remaining} currency={currency} />
-                    </>
-                  )}
-                </span>
-              </>
-            ) : null}
-            {error ? (
-              <span role="alert" className="text-destructive">
-                {error}
-              </span>
-            ) : null}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setLines((ls) => (ls ? [...ls, newLine()] : ls))}
+            >
+              <PlusIcon /> Add line
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setLines(null)}
+            >
+              Remove split
+            </Button>
+            <span
+              aria-live="polite"
+              className={remaining === 0 ? 'text-positive' : 'text-destructive'}
+            >
+              {remaining === null ? (
+                'Enter valid amounts'
+              ) : remaining === 0 ? (
+                'Split adds up'
+              ) : (
+                <>
+                  Remaining to split:{' '}
+                  <Money value={remaining} currency={currency} />
+                </>
+              )}
+            </span>
           </div>
-        </td>
-      </tr>
-    </>
+        </div>
+      ) : canSplit ? (
+        <div>
+          <Button
+            type="button"
+            size="xs"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground -ml-2"
+            onClick={startSplit}
+          >
+            <SplitIcon /> Split transaction
+          </Button>
+        </div>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
+      <DialogFooter>
+        <Button type="submit" disabled={pending}>
+          {pending ? 'Saving…' : 'Save'}
+        </Button>
+      </DialogFooter>
+    </form>
   )
 }
