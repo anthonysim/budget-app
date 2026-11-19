@@ -11,7 +11,9 @@ import type { MonthString } from '#/lib/month'
  * - Overspending is "credit" up to the amount spent on credit accounts that month, the rest is "cash".
  *   Only cash overspending reduces Ready to Assign (from the NEXT month onward).
  *   Credit overspending becomes credit-card debt (handled by credit card payment categories, PR 10).
- * - Ready to Assign(month) = income through month - assigned through month - cash overspending of earlier months
+ * - Ready to Assign is one pool shared by every month: all income - all assigned - cash
+ *   overspending, across every month with data. It does not matter which month the money was
+ *   assigned in, so every month shows the same number.
  * - Credit card payment categories: spending on a card moves the FUNDED part (spend minus credit
  *   overspending) from the spending category into that card's payment category; refunds move it back.
  *   Payments (categorized transfers) are negative activity in the payment category.
@@ -137,13 +139,17 @@ export function computeBudgetMonth(
   }
 
   // Walk from the earliest month that has any data (or the target) up to the target.
+  // Also walk past the target to the last month with data: money assigned in future months
+  // comes out of the same Ready to Assign pool.
   let start = target
+  let end = target
   for (const m of [
     ...input.assignments.map((a) => a.month),
     ...input.activity.map((a) => a.month),
     ...input.income.map((i) => i.month),
   ]) {
     if (m < start) start = m
+    if (m > end) end = m
   }
 
   const carry = new Map<string, number>()
@@ -151,8 +157,9 @@ export function computeBudgetMonth(
   let cumAssigned = 0
   let cumCashOverBefore = 0
   let result: BudgetMonthResult | undefined
+  let finalRta = 0
 
-  for (let m = start; m <= target; m = addMonths(m, 1)) {
+  for (let m = start; m <= end; m = addMonths(m, 1)) {
     cumIncome += incomeBy.get(m) ?? 0
     let monthAssigned = 0
     let monthActivity = 0
@@ -229,19 +236,23 @@ export function computeBudgetMonth(
     const readyToAssign = cumIncome - cumAssigned - cumCashOverBefore
     cumCashOverBefore += monthCashOver
 
-    result = {
-      month: m,
-      readyToAssign,
-      categories,
-      totals: {
-        assigned: monthAssigned,
-        activity: monthActivity,
-        available: monthAvailable,
-        cashOverspent: monthCashOver,
-      },
+    finalRta = readyToAssign
+    if (m === target) {
+      result = {
+        month: m,
+        readyToAssign,
+        categories,
+        totals: {
+          assigned: monthAssigned,
+          activity: monthActivity,
+          available: monthAvailable,
+          cashOverspent: monthCashOver,
+        },
+      }
     }
   }
 
-  // The loop always runs at least once because start <= target.
-  return result as BudgetMonthResult
+  // The loop always reaches the target because start <= target <= end.
+  const final = result as BudgetMonthResult
+  return { ...final, readyToAssign: finalRta }
 }
