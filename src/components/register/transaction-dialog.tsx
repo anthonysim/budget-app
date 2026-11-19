@@ -17,7 +17,11 @@ import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
-import { formatMoneyField, parseMoneyExpression } from '#/lib/money'
+import {
+  formatMilliunits,
+  formatMoneyField,
+  parseMoneyExpression,
+} from '#/lib/money'
 import { splitRemaining, validateSplit } from '#/lib/splits'
 import { combineAmount, dateSchema, splitAmount } from '#/lib/transactions'
 import { parseTransferPayee } from '#/lib/transfers'
@@ -42,6 +46,12 @@ interface LineDraft {
   memo: string
   outflow: string
   inflow: string
+}
+
+interface CategorySummary {
+  assigned: number
+  activity: number
+  available: number
 }
 
 function moneyField(milli: number): string {
@@ -257,6 +267,7 @@ function TransactionForm({
     }
     startTransition(async () => {
       try {
+        let summary: CategorySummary | null = null
         if (transaction) {
           await updateTransaction({
             data: {
@@ -266,10 +277,22 @@ function TransactionForm({
             },
           })
         } else {
-          await createTransaction({ data: payload })
+          summary = (await createTransaction({ data: payload })).summary
         }
         await router.invalidate()
-        toast.success(transaction ? 'Transaction saved' : 'Transaction added')
+        if (transaction) {
+          toast.success('Transaction saved')
+        } else if (summary && payload.categoryId) {
+          const name = categoryGroups
+            .flatMap((g) => g.categories)
+            .find((c) => c.id === payload.categoryId)?.name
+          const show = summary.available < 0 ? toast.warning : toast.success
+          show('Transaction added', {
+            description: `${name ?? 'Category'}: Assigned ${formatMilliunits(summary.assigned, currency)} · Activity ${formatMilliunits(summary.activity, currency)} · Available ${formatMilliunits(summary.available, currency)}`,
+          })
+        } else {
+          toast.success('Transaction added')
+        }
         onDone()
       } catch {
         setError('Could not save the transaction.')

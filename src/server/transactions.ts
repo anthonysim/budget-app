@@ -13,6 +13,7 @@ import {
   updateTransactionSchema,
 } from '#/lib/transactions'
 import { requireBudgetRole } from '#/server/budget-access'
+import { queryCategoryMonthSummary } from '#/server/budget-month-query'
 import { queryScheduled } from '#/server/scheduled-query'
 import {
   checkedSplits,
@@ -63,6 +64,17 @@ export const createTransaction = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireBudgetRole(data.budgetId, 'editor')
     await db().transaction((tx) => insertTransaction(tx, data))
+    // where the category stands this month, for the "Transaction added" toast
+    const single = !data.transferAccountId && !data.splits?.length
+    const summary =
+      single && data.categoryId
+        ? await queryCategoryMonthSummary(
+            data.budgetId,
+            data.categoryId,
+            data.date,
+          )
+        : null
+    return { summary }
   })
 
 export const updateTransaction = createServerFn({ method: 'POST' })
