@@ -67,8 +67,9 @@ export function AppSidebar({
       collapsible="icon"
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]"
     >
-      <SidebarHeader className="flex-row items-center justify-end group-data-[collapsible=icon]:justify-center">
-        <SidebarTrigger aria-label="Toggle sidebar" />
+      {/* Same left edge and size as the nav icons below, so the button stays put when collapsing. */}
+      <SidebarHeader className="flex-row items-center justify-start">
+        <SidebarTrigger aria-label="Toggle sidebar" className="size-8" />
       </SidebarHeader>
 
       <SidebarContent>
