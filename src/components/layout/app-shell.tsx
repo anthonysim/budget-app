@@ -15,7 +15,6 @@ import { ShortcutsDialog } from '#/components/layout/shortcuts-dialog'
 import { InvitesBanner } from '#/components/sharing/invites-banner'
 import type { MyInvite } from '#/lib/sharing'
 import { UserMenu } from '#/components/layout/user-menu'
-import { ThemeToggle } from '#/components/theme-toggle'
 
 export function AppShell({
   email,
@@ -57,7 +56,6 @@ export function AppShell({
               currency={budget.currency}
               dateFormat={budget.dateFormat}
             />
-            <ThemeToggle />
             <UserMenu email={email} />
           </div>
         </div>
