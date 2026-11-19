@@ -43,3 +43,23 @@ export function parsePercentToBps(input: string): number | null {
   const bps = Math.round(Number(t) * 100)
   return bps <= 100_000 ? bps : null
 }
+
+/**
+ * Text for a money input: always two decimals ("50.00"), or three when the amount has
+ * sub-cent precision so nothing is lost. No currency symbol or thousands separators.
+ */
+export function formatMoneyField(milliunits: Milliunits): string {
+  return milliunits % 10 === 0
+    ? (milliunits / 1000).toFixed(2)
+    : (milliunits / 1000).toFixed(3)
+}
+
+/**
+ * Normalizes typed money text to {@link formatMoneyField} ("50" -> "50.00", "$1,200.5" ->
+ * "1200.50"). Blank or invalid text is returned unchanged so the user can keep editing.
+ */
+export function normalizeMoneyText(text: string): string {
+  if (text.trim() === '') return text
+  const milli = parseMoneyInput(text)
+  return milli === null ? text : formatMoneyField(milli)
+}

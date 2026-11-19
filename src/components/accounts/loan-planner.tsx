@@ -3,13 +3,14 @@ import { Money } from '#/components/accounts/money'
 import { ChartCard, DataTable } from '#/components/reports/chart-card'
 import { LineChart } from '#/components/reports/line-chart'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { comparePayoff, payoffMonth } from '#/domain/payoff'
 import { formatAxisAmount, shortMonth } from '#/lib/chart'
 import { firstOfMonth, formatMonth } from '#/lib/month'
 import {
   formatMilliunits,
-  milliunitsToDollars,
+  formatMoneyField,
   parseMoneyInput,
   parsePercentToBps,
 } from '#/lib/money'
@@ -34,7 +35,7 @@ export function LoanPlanner({
     aprBps === null ? '' : String(aprBps / 100),
   )
   const [payText, setPayText] = useState(
-    minPayment === null ? '' : String(milliunitsToDollars(minPayment)),
+    minPayment === null ? '' : formatMoneyField(minPayment),
   )
   const [extraText, setExtraText] = useState('0')
 
@@ -112,20 +113,18 @@ export function LoanPlanner({
         </div>
         <div className="grid gap-1">
           <Label htmlFor="plan-payment">Monthly payment</Label>
-          <Input
+          <MoneyInput
             id="plan-payment"
-            inputMode="decimal"
-            autoComplete="off"
+
             value={payText}
             onChange={(e) => setPayText(e.target.value)}
           />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="plan-extra">Extra each month (what if)</Label>
-          <Input
+          <MoneyInput
             id="plan-extra"
-            inputMode="decimal"
-            autoComplete="off"
+
             value={extraText}
             onChange={(e) => setExtraText(e.target.value)}
           />

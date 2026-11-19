@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   dollarsToMilliunits,
   formatMilliunits,
+  formatMoneyField,
   milliunitsToDollars,
+  normalizeMoneyText,
   parseMoneyInput,
   parsePercentToBps,
 } from './money'
@@ -45,5 +47,30 @@ describe('money', () => {
     expect(parsePercentToBps('abc')).toBeNull()
     expect(parsePercentToBps('-3')).toBeNull()
     expect(parsePercentToBps('1.234')).toBeNull()
+  })
+})
+
+describe('money input formatting', () => {
+  it('formats with two decimals', () => {
+    expect(formatMoneyField(50_000)).toBe('50.00')
+    expect(formatMoneyField(12_500)).toBe('12.50')
+    expect(formatMoneyField(-5_000)).toBe('-5.00')
+  })
+
+  it('keeps a third decimal when the amount has sub-cent precision', () => {
+    expect(formatMoneyField(12_345)).toBe('12.345')
+  })
+
+  it('normalizes typed text', () => {
+    expect(normalizeMoneyText('50')).toBe('50.00')
+    expect(normalizeMoneyText('$1,200.5')).toBe('1200.50')
+    expect(normalizeMoneyText('.5')).toBe('0.50')
+    expect(normalizeMoneyText('50.')).toBe('50.00')
+  })
+
+  it('leaves blank and invalid text alone', () => {
+    expect(normalizeMoneyText('')).toBe('')
+    expect(normalizeMoneyText('abc')).toBe('abc')
+    expect(normalizeMoneyText('1.2345')).toBe('1.2345')
   })
 })

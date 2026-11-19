@@ -12,11 +12,12 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
-import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyInput } from '#/lib/money'
 import { splitRemaining, validateSplit } from '#/lib/splits'
 import { combineAmount, dateSchema, splitAmount } from '#/lib/transactions'
 import { parseTransferPayee } from '#/lib/transfers'
@@ -44,7 +45,7 @@ interface LineDraft {
 }
 
 function moneyField(milli: number): string {
-  return milli === 0 ? '' : String(milliunitsToDollars(milli))
+  return milli === 0 ? '' : formatMoneyField(milli)
 }
 
 function parseField(text: string): number | null {
@@ -354,22 +355,18 @@ function TransactionForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-2">
           <Label htmlFor="txn-outflow">Outflow</Label>
-          <Input
+          <MoneyInput
             id="txn-outflow"
-            inputMode="decimal"
             placeholder="0.00"
-            autoComplete="off"
             value={outflow}
             onChange={(e) => setOutflow(e.target.value)}
           />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="txn-inflow">Inflow</Label>
-          <Input
+          <MoneyInput
             id="txn-inflow"
-            inputMode="decimal"
             placeholder="0.00"
-            autoComplete="off"
             value={inflow}
             onChange={(e) => setInflow(e.target.value)}
           />
@@ -443,21 +440,17 @@ function TransactionForm({
                 onChange={(e) => updateLine(l.key, { memo: e.target.value })}
               />
               <div className="grid grid-cols-2 gap-3">
-                <Input
+                <MoneyInput
                   aria-label={`Split ${i + 1} outflow`}
-                  inputMode="decimal"
                   placeholder="Outflow 0.00"
-                  autoComplete="off"
                   value={l.outflow}
                   onChange={(e) =>
                     updateLine(l.key, { outflow: e.target.value })
                   }
                 />
-                <Input
+                <MoneyInput
                   aria-label={`Split ${i + 1} inflow`}
-                  inputMode="decimal"
                   placeholder="Inflow 0.00"
-                  autoComplete="off"
                   value={l.inflow}
                   onChange={(e) =>
                     updateLine(l.key, { inflow: e.target.value })

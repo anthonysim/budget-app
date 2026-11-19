@@ -12,12 +12,13 @@ import {
   DialogTrigger,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { CategoryOptions } from '#/components/register/category-options'
 import { NativeSelect } from '#/components/register/native-select'
 import { NewCategoryInline } from '#/components/scheduled/new-category-inline'
 import { todayString } from '#/lib/date'
-import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyInput } from '#/lib/money'
 import { FREQUENCIES, FREQUENCY_LABELS } from '#/lib/schedule'
 import type { Frequency } from '#/lib/schedule'
 import { combineAmount, dateSchema, splitAmount } from '#/lib/transactions'
@@ -35,7 +36,7 @@ interface AccountOption {
 }
 
 function moneyField(milli: number): string {
-  return milli === 0 ? '' : String(milliunitsToDollars(milli))
+  return milli === 0 ? '' : formatMoneyField(milli)
 }
 
 function parseField(text: string): number | null {
@@ -316,22 +317,18 @@ function ScheduledForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="grid gap-2">
           <Label htmlFor="sched-outflow">Outflow</Label>
-          <Input
+          <MoneyInput
             id="sched-outflow"
-            inputMode="decimal"
             placeholder="0.00"
-            autoComplete="off"
             value={outflow}
             onChange={(e) => setOutflow(e.target.value)}
           />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="sched-inflow">Inflow</Label>
-          <Input
+          <MoneyInput
             id="sched-inflow"
-            inputMode="decimal"
             placeholder="0.00"
-            autoComplete="off"
             value={inflow}
             onChange={(e) => setInflow(e.target.value)}
           />
