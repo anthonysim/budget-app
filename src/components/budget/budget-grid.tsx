@@ -273,17 +273,6 @@ export function BudgetGrid({
 
         <div className="flex items-end gap-1 justify-self-end">
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={toggleAll}>
-              {allCollapsed ? (
-                <>
-                  <ChevronsUpDownIcon /> Expand all
-                </>
-              ) : (
-                <>
-                  <ChevronsDownUpIcon /> Collapse all
-                </>
-              )}
-            </Button>
             {canEdit ? (
               <>
                 <DropdownMenu>
@@ -343,7 +332,21 @@ export function BudgetGrid({
                 <th className="px-3 py-2 text-right font-medium">Assigned</th>
                 <th className="px-3 py-2 text-right font-medium">Activity</th>
                 <th className="px-3 py-2 text-right font-medium">Available</th>
-                <th className="w-10 px-2 py-2" />
+                <th className="w-10 px-2 py-1 text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={toggleAll}
+                    aria-label={allCollapsed ? 'Expand all' : 'Collapse all'}
+                    title={allCollapsed ? 'Expand all' : 'Collapse all'}
+                  >
+                    {allCollapsed ? (
+                      <ChevronsUpDownIcon />
+                    ) : (
+                      <ChevronsDownUpIcon />
+                    )}
+                  </Button>
+                </th>
               </tr>
             </thead>
             <tbody>
