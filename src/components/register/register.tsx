@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
+import { SearchInput } from '#/components/ui/search-input'
 import {
   Select,
   SelectContent,
@@ -267,12 +267,13 @@ export function Register({
   return (
     <section aria-label="Transactions" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           aria-label="Search transactions"
           placeholder="Search payee, memo, category…"
           className="max-w-xs"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onClear={() => setQuery('')}
         />
         <NativeSelect
           aria-label="Filter by cleared status"
