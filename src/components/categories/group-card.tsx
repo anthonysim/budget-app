@@ -94,7 +94,10 @@ export function GroupCard({
   }
 
   return (
-    <SortableItem id={group.id} className="bg-card rounded-lg border">
+    <SortableItem
+      id={group.id}
+      className="bg-card overflow-clip rounded-lg border"
+    >
       <div className="flex items-center gap-1 px-2 py-2">
         {canEdit ? <DragHandle label={`Reorder group ${group.name}`} /> : null}
         <h2
