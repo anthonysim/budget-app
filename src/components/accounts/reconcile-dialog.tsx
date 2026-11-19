@@ -12,12 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '#/components/ui/dialog'
-import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { ACCOUNT_TYPE_INFO, startingBalanceFor } from '#/lib/accounts'
 import type { AccountType } from '#/lib/accounts'
 import { todayString } from '#/lib/date'
-import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyInput } from '#/lib/money'
 import { reconcileDifference } from '#/lib/splits'
 import { reconcileAccount } from '#/server/reconcile'
 
@@ -54,7 +54,7 @@ export function ReconcileDialog({
     if (next) {
       // start from what the app thinks the bank balance is
       const shown = isDebt ? -clearedBalance : clearedBalance
-      setEntered(String(milliunitsToDollars(shown)))
+      setEntered(formatMoneyField(shown))
       setError(null)
     }
   }
@@ -105,10 +105,8 @@ export function ReconcileDialog({
             <Label htmlFor="bank-balance">
               {isDebt ? 'Amount owed at your bank' : 'Bank balance'}
             </Label>
-            <Input
+            <MoneyInput
               id="bank-balance"
-              inputMode="decimal"
-              autoComplete="off"
               value={entered}
               onChange={(e) => setEntered(e.target.value)}
             />

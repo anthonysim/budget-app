@@ -12,9 +12,14 @@ import {
   DialogTrigger,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { accountNameSchema } from '#/lib/accounts'
-import { parseMoneyInput, parsePercentToBps } from '#/lib/money'
+import {
+  formatMoneyField,
+  parseMoneyInput,
+  parsePercentToBps,
+} from '#/lib/money'
 import { updateAccount } from '#/server/accounts'
 
 export function EditAccountDialog({
@@ -140,14 +145,12 @@ export function EditAccountDialog({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-account-min">Minimum payment</Label>
-                <Input
+                <MoneyInput
                   id="edit-account-min"
                   name="minPayment"
-                  inputMode="decimal"
                   placeholder="0.00"
-                  autoComplete="off"
                   defaultValue={
-                    minPayment === null ? '' : String(minPayment / 1000)
+                    minPayment === null ? '' : formatMoneyField(minPayment)
                   }
                 />
               </div>

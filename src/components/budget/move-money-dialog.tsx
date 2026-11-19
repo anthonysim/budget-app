@@ -9,10 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { NativeSelect } from '#/components/register/native-select'
-import { parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyInput } from '#/lib/money'
 import { moveMoney } from '#/server/budget-month'
 import type { BudgetGroupRow } from '#/lib/budget-month'
 
@@ -87,14 +87,12 @@ export function MoveMoneyDialog({
           </DialogHeader>
           <div className="grid gap-2">
             <Label htmlFor="move-amount">Amount</Label>
-            <Input
+            <MoneyInput
               id="move-amount"
               name="amount"
-              inputMode="decimal"
-              autoComplete="off"
               autoFocus
               defaultValue={
-                from.available > 0 ? (from.available / 1000).toFixed(2) : ''
+                from.available > 0 ? formatMoneyField(from.available) : ''
               }
             />
           </div>

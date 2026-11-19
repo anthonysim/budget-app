@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import {
   Select,
@@ -148,12 +149,10 @@ export function AddAccountDialog({
             <Label htmlFor="account-balance">
               {isDebt ? 'Amount owed' : 'Current balance'}
             </Label>
-            <Input
+            <MoneyInput
               id="account-balance"
               name="balance"
-              inputMode="decimal"
               placeholder="0.00"
-              autoComplete="off"
             />
           </div>
           {error ? (

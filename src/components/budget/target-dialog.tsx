@@ -10,10 +10,11 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { MoneyInput } from '#/components/ui/money-input'
 import { Label } from '#/components/ui/label'
 import { NativeSelect } from '#/components/register/native-select'
 import { todayString } from '#/lib/date'
-import { milliunitsToDollars, parseMoneyInput } from '#/lib/money'
+import { formatMoneyField, parseMoneyInput } from '#/lib/money'
 import {
   TARGET_BEHAVIORS,
   TARGET_REPEATS,
@@ -55,7 +56,7 @@ export function TargetDialog({
       (isPaymentCategory ? 'monthly_funding' : 'needed_for_spending'),
   )
   const [amount, setAmount] = useState(
-    existing ? String(milliunitsToDollars(existing.amount)) : '',
+    existing ? formatMoneyField(existing.amount) : '',
   )
   const [repeat, setRepeat] = useState<Repeat>(existing?.repeat ?? 'monthly')
   const [dueDate, setDueDate] = useState(existing?.dueDate ?? todayString())
@@ -151,11 +152,9 @@ export function TargetDialog({
 
           <div className="grid gap-2">
             <Label htmlFor="target-amount">Amount</Label>
-            <Input
+            <MoneyInput
               id="target-amount"
-              inputMode="decimal"
               placeholder="0.00"
-              autoComplete="off"
               autoFocus
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
