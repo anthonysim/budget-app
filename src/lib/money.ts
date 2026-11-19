@@ -1,3 +1,5 @@
+import { evalAssignedInput } from '#/lib/assign-expression'
+
 /**
  * Money is stored as integer milliunits ($1.00 = 1000), like YNAB.
  * Never use floats for stored/calculated amounts.
@@ -36,6 +38,19 @@ export function parseMoneyInput(input: string): Milliunits | null {
   return negative ? -milli : milli
 }
 
+/**
+ * Like {@link parseMoneyInput} but also evaluates arithmetic ("3201.15+35.07", "(20+5)*2",
+ * "100-12.5"). Operators are + - * / and parentheses. Null when blank or not valid.
+ */
+export function parseMoneyExpression(input: string): Milliunits | null {
+  const plain = parseMoneyInput(input)
+  if (plain !== null) return plain
+  const text = input.trim()
+  // a leading * or / would be relative to a current value, which has no meaning here
+  if (text === '' || text[0] === '*' || text[0] === '/') return null
+  return evalAssignedInput(text, 0)
+}
+
 /** "19.99" or "19.99%" -> basis points (1999). Null if not a valid percentage 0 to 1000. */
 export function parsePercentToBps(input: string): number | null {
   const t = input.trim().replace(/%$/, '').trim()
@@ -56,10 +71,11 @@ export function formatMoneyField(milliunits: Milliunits): string {
 
 /**
  * Normalizes typed money text to {@link formatMoneyField} ("50" -> "50.00", "$1,200.5" ->
- * "1200.50"). Blank or invalid text is returned unchanged so the user can keep editing.
+ * "1200.50"). With `expressions`, arithmetic is evaluated first ("10+5" -> "15.00"). Blank or
+ * invalid text is returned unchanged so the user can keep editing.
  */
-export function normalizeMoneyText(text: string): string {
+export function normalizeMoneyText(text: string, expressions = false): string {
   if (text.trim() === '') return text
-  const milli = parseMoneyInput(text)
+  const milli = expressions ? parseMoneyExpression(text) : parseMoneyInput(text)
   return milli === null ? text : formatMoneyField(milli)
 }
